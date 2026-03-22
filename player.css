@@ -77,6 +77,12 @@ body::-webkit-scrollbar{ display:none; } /* Chrome/Safari */
   bottom:16px;
   transition:box-shadow .2s, opacity .3s;
 }
+#music-player.mp-pending-init{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:none;
+}
 #music-player:hover{
   box-shadow:0 12px 52px rgba(0,0,0,.65), 0 0 0 1px rgba(126,170,255,.08);
 }

@@ -21,6 +21,7 @@
   const DB_NAME      = 'MusicPlayerDB';
   const DB_VER       = 1;
   const STORE        = 'localTracks';
+  const DEFAULT_PLAYER_GAP = 16;
 
   /* ── 内置曲目：只填 src，名称/作者自动解析 ── */
   const BUILTIN_SRCS = [
@@ -64,6 +65,7 @@
   const elCollapse = document.getElementById('mp-collapse');
   const elUpload      = document.getElementById('mp-upload');
   const elUploadInput = document.getElementById('mp-upload-input');
+  const savedState = (()=>{ try{return JSON.parse(sessionStorage.getItem(PKEY)||'null');}catch(e){ return null; } })();
 
   function fmt(s){ s=Math.floor(s||0); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
 
@@ -535,6 +537,13 @@
     return !!(player.style.left && player.style.top);
   }
 
+  function dockPlayerToDefaultCorner(){
+    player.style.left='';
+    player.style.top='';
+    player.style.right=DEFAULT_PLAYER_GAP+'px';
+    player.style.bottom=DEFAULT_PLAYER_GAP+'px';
+  }
+
   function clampExplicitPlayerPosition(){
     if(!hasExplicitPlayerPosition()) return;
     const maxX=Math.max(0, window.innerWidth-player.offsetWidth);
@@ -545,9 +554,31 @@
     player.style.top =y+'px';
   }
 
+  function applyInitialPlayerLayout(st){
+    if(st?.posX && st?.posY){
+      player.style.right='auto';
+      player.style.bottom='auto';
+      player.style.left=st.posX;
+      player.style.top=st.posY;
+      clampExplicitPlayerPosition();
+    }else{
+      dockPlayerToDefaultCorner();
+    }
+
+    isCollapsed=!!st?.isCollapsed;
+    player.classList.toggle('collapsed', isCollapsed);
+    elList.classList.toggle('open', !!st?.listOpen);
+    elListBtn.classList.toggle('active', !!st?.listOpen);
+  }
+
+  function revealPlayer(){
+    player.classList.remove('mp-pending-init');
+  }
+
   function restoreState(st){
     if(!st) return;
     if(st.posX && st.posY){player.style.right='auto';player.style.bottom='auto';player.style.left=st.posX;player.style.top=st.posY;}
+    else{ dockPlayerToDefaultCorner(); }
     clampExplicitPlayerPosition();
     setVolume(st.volume??0.75);
     if(st.isShuffle){isShuffle=true;elShuffle.style.color='var(--accent,#7eaaff)';}
@@ -700,6 +731,9 @@
   window.addEventListener('blur', stopDrag);
   document.addEventListener('mouseleave', stopDrag);
 
+  applyInitialPlayerLayout(savedState);
+  revealPlayer();
+
   /* ══ 主初始化 ══ */
   async function init(){
     await openDB();
@@ -716,10 +750,7 @@
     renderPlaylist();
     setVolume(0.75);
 
-    let st;
-    try{ st=JSON.parse(sessionStorage.getItem(PKEY)); }catch(e){}
-
-    restoreState(st);
+    restoreState(savedState);
   }
 
   init();
