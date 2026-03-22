@@ -698,7 +698,9 @@ svg{ opacity:0; animation:svgIn .6s var(--ease-snap) .1s forwards; }
   /* ══ 状态 ══ */
   let favorites=[];
   let groups=[{id:0,name:'默认分组'}];
-  const SKEY='mindmapFavoritesV2';
+  const LEGACY_SKEY='mindmapFavoritesV2';
+  const PAGE_SCOPE=((location.pathname.split('/').pop()||'index.html').replace(/[^a-zA-Z0-9_-]/g,'_').toLowerCase());
+  const SKEY=`mindmapFavoritesV3:${PAGE_SCOPE}`;
 
   /* ══ Toast ══ */
   const toastBox=document.getElementById('toast-container');
@@ -718,12 +720,38 @@ svg{ opacity:0; animation:svgIn .6s var(--ease-snap) .1s forwards; }
   }
 
   /* ══ 存储 ══ */
-  function load(){
+  function readStoredState(key){
     try{
-      const p=JSON.parse(localStorage.getItem(SKEY)||'{}');
-      favorites=p.favorites||[];
-      groups=(p.groups&&p.groups.length)?p.groups:[{id:0,name:'默认分组'}];
-    }catch(e){favorites=[];groups=[{id:0,name:'默认分组'}];}
+      const raw=localStorage.getItem(key);
+      if(!raw)return null;
+      const parsed=JSON.parse(raw);
+      if(!parsed||typeof parsed!=='object')return null;
+      return parsed;
+    }catch(e){
+      return null;
+    }
+  }
+  function applyStoredState(state){
+    favorites=Array.isArray(state?.favorites)?state.favorites:[];
+    groups=(Array.isArray(state?.groups)&&state.groups.length)?state.groups:[{id:0,name:'默认分组'}];
+  }
+  function load(){
+    const scopedState=readStoredState(SKEY);
+    if(scopedState){
+      applyStoredState(scopedState);
+      return;
+    }
+
+    const legacyState=readStoredState(LEGACY_SKEY);
+    if(legacyState){
+      applyStoredState(legacyState);
+      favorites=favorites.filter(f=>f.path?nodeExistsInOrig(f.path):nodeExistsInOrig([f.content]));
+      save();
+      return;
+    }
+
+    favorites=[];
+    groups=[{id:0,name:'默认分组'}];
   }
   function save(){localStorage.setItem(SKEY,JSON.stringify({favorites,groups}));}
 
