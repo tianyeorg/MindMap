@@ -16,10 +16,11 @@
     el.addEventListener('mouseleave',()=>{t=setTimeout(dismiss,dur);});
   }
 
-  const PKEY    = 'musicPlayerState';
-  const DB_NAME = 'MusicPlayerDB';
-  const DB_VER  = 1;
-  const STORE   = 'localTracks';
+  const PKEY         = 'musicPlayerState';
+  const PLAYLIST_KEY = 'musicPlayerPlaylist';
+  const DB_NAME      = 'MusicPlayerDB';
+  const DB_VER       = 1;
+  const STORE        = 'localTracks';
 
   /* ── 内置曲目：只填 src，名称/作者自动解析 ── */
   const BUILTIN_SRCS = [
@@ -36,6 +37,7 @@
   ];
 
   let tracks = [];
+  let builtinTracks = [];
 
   const player    = document.getElementById('music-player');
   const audio     = new Audio();
@@ -64,6 +66,109 @@
   const elUploadInput = document.getElementById('mp-upload-input');
 
   function fmt(s){ s=Math.floor(s||0); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+
+  function getTrackRef(track){
+    if(track?.isLocal && track.dbId){
+      return {kind:'local',dbId:track.dbId};
+    }
+    if(track?.src && BUILTIN_SRCS.includes(track.src)){
+      return {kind:'builtin',src:track.src};
+    }
+    if(track?.src){
+      return {
+        kind:'remote',
+        src:track.src,
+        name:track.name||nameFromSrc(track.src),
+        artist:track.artist||'',
+        cover:track.cover||null,
+        emoji:track.emoji||'🎵'
+      };
+    }
+    return null;
+  }
+
+  function trackRefKey(ref){
+    if(!ref?.kind) return null;
+    if(ref.kind==='local') return `local:${ref.dbId}`;
+    return `${ref.kind}:${ref.src||''}`;
+  }
+
+  function persistPlaylist(){
+    try{
+      localStorage.setItem(PLAYLIST_KEY, JSON.stringify(tracks.map(getTrackRef).filter(Boolean)));
+    }catch(e){}
+  }
+
+  function readPlaylistSnapshot(){
+    try{
+      const raw=localStorage.getItem(PLAYLIST_KEY);
+      if(raw===null) return null;
+      const parsed=JSON.parse(raw);
+      return Array.isArray(parsed)?parsed:null;
+    }catch(e){
+      return null;
+    }
+  }
+
+  function hydratePlaylist(snapshot,builtins,locals){
+    const builtinMap=new Map(builtins.map(track=>[track.src,track]));
+    const localMap=new Map(locals.map(track=>[track.dbId,track]));
+    if(!Array.isArray(snapshot)) return [...builtins,...locals];
+
+    const restored=[];
+    const seenKeys=new Set();
+    function pushTrack(track){
+      const key=trackRefKey(getTrackRef(track));
+      if(!key||seenKeys.has(key)) return;
+      seenKeys.add(key);
+      restored.push(track);
+    }
+    for(const ref of snapshot){
+      if(!ref?.kind) continue;
+      if(ref.kind==='builtin' && builtinMap.has(ref.src)){
+        pushTrack(builtinMap.get(ref.src));
+        continue;
+      }
+      if(ref.kind==='local' && localMap.has(ref.dbId)){
+        pushTrack(localMap.get(ref.dbId));
+        continue;
+      }
+      if(ref.kind==='remote' && ref.src){
+        pushTrack({
+          name:ref.name||nameFromSrc(ref.src),
+          artist:ref.artist||'',
+          cover:ref.cover||null,
+          emoji:ref.emoji||'🎵',
+          src:ref.src,
+          isLocal:false,
+          dbId:null
+        });
+      }
+    }
+    return restored;
+  }
+
+  function restoreBuiltinTracks(){
+    if(!builtinTracks.length){
+      showMsg('内置曲目尚未加载完成','default');
+      return;
+    }
+    const existingKeys=new Set(tracks.map(track=>trackRefKey(getTrackRef(track))).filter(Boolean));
+    const missing=builtinTracks.filter(track=>{
+      const key=trackRefKey(getTrackRef(track));
+      return key&&!existingKeys.has(key);
+    });
+    if(!missing.length){
+      showMsg('内置曲目已经都在歌单里了','default');
+      return;
+    }
+
+    tracks=[...tracks,...missing];
+    persistPlaylist();
+    renderPlaylist();
+    if(curIdx<0&&tracks.length) loadTrack(0,false);
+    showMsg(`已恢复 ${missing.length} 首内置曲目`,'success');
+  }
 
   /* ══ IndexedDB ══ */
   let db = null;
@@ -221,6 +326,7 @@
     if(newTracks.length){
       const firstNew=tracks.length;
       tracks=[...tracks,...newTracks];
+      persistPlaylist();
       renderPlaylist();
       loadTrack(firstNew);
     }
@@ -241,6 +347,11 @@
     expBtn.id='mp-io-export'; expBtn.className='mp-upload-btn';
     expBtn.title='导出曲目列表'; expBtn.textContent='↑';
 
+    // 恢复内置曲目按钮
+    const restoreBtn=document.createElement('button');
+    restoreBtn.id='mp-restore-builtins'; restoreBtn.className='mp-upload-btn';
+    restoreBtn.title='恢复内置曲目'; restoreBtn.textContent='↺';
+
     // 导入 label+input
     const impLabel=document.createElement('label');
     impLabel.className='mp-upload-btn'; impLabel.title='导入曲目列表';
@@ -253,6 +364,12 @@
     const uploadBtn=document.getElementById('mp-upload');
     wrap.insertBefore(impLabel,uploadBtn);
     wrap.insertBefore(expBtn,impLabel);
+    wrap.insertBefore(restoreBtn,expBtn);
+
+    restoreBtn.addEventListener('click',e=>{
+      e.stopPropagation();
+      restoreBuiltinTracks();
+    });
 
     /* 导出：本地曲目把二进制数据一起打包进 JSON（base64），不依赖 dbId */
     expBtn.addEventListener('click',async e=>{
@@ -355,6 +472,7 @@
 
       // 追加到现有列表（而不是替换）
       tracks=[...tracks,...result];
+      persistPlaylist();
       renderPlaylist();
       if(tracks.length&&curIdx<0) loadTrack(0);
       const msg=`已导入 ${ok} 首`
@@ -381,11 +499,13 @@
 
   /* ══ 状态保存/恢复 ══ */
   function saveState(){
+    const currentTrack=curIdx>=0?tracks[curIdx]:null;
     sessionStorage.setItem(PKEY,JSON.stringify({
       curIdx, currentTime:audio.currentTime, volume:audio.volume,
       isShuffle,isRepeat,isCollapsed, wasPlaying:isPlaying,
       listOpen:elList.classList.contains('open'),
-      posX:player.style.left||null, posY:player.style.top||null
+      posX:player.style.left||null, posY:player.style.top||null,
+      currentTrackRef:getTrackRef(currentTrack)
     }));
   }
 
@@ -419,8 +539,17 @@
     if(st.isRepeat) {isRepeat=true; elRepeat.style.color='var(--accent,#7eaaff)';audio.loop=true;}
     if(st.isCollapsed){isCollapsed=true;player.classList.add('collapsed');}
     if(st.listOpen){elList.classList.add('open');elListBtn.classList.add('active');}
-    if(st.curIdx>=0&&st.curIdx<tracks.length){
-      loadTrack(st.curIdx,false);
+    const restoreIdx=(()=>{
+      const refKey=trackRefKey(st.currentTrackRef);
+      if(refKey){
+        const matchedIdx=tracks.findIndex(track=>trackRefKey(getTrackRef(track))===refKey);
+        if(matchedIdx>=0) return matchedIdx;
+      }
+      if(st.curIdx>=0&&st.curIdx<tracks.length) return st.curIdx;
+      return -1;
+    })();
+    if(restoreIdx>=0){
+      loadTrack(restoreIdx,false);
       audio.addEventListener('loadedmetadata',function h(){
         audio.currentTime=st.currentTime||0;
         audio.removeEventListener('loadedmetadata',h);
@@ -487,6 +616,7 @@
       if(tracks.length){ loadTrack(Math.min(i,tracks.length-1)); }
       else{ curIdx=-1; pauseAudio(); elSong.textContent='上传或选择曲目'; elArtist.textContent='— —'; setCover(null,'🎵'); }
     } else if(curIdx>i){ curIdx--; }
+    persistPlaylist();
     renderPlaylist();
   }
 
@@ -565,7 +695,10 @@
       initBuiltins(),
       loadFromDB(),
     ]);
-    tracks=[...builtins,...locals];
+    builtinTracks=builtins;
+    const playlistSnapshot=readPlaylistSnapshot();
+    tracks=hydratePlaylist(playlistSnapshot,builtins,locals);
+    persistPlaylist();
     renderPlaylist();
     setVolume(0.75);
 
