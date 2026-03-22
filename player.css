@@ -63,6 +63,7 @@ body::-webkit-scrollbar{ display:none; } /* Chrome/Safari */
 #music-player{
   position:fixed; z-index:900;
   width:300px;
+  max-width:calc(100vw - 32px);
   background:var(--surface);
   border:1px solid var(--border2);
   border-radius:20px;
@@ -72,6 +73,8 @@ body::-webkit-scrollbar{ display:none; } /* Chrome/Safari */
   user-select:none;
   display:grid;
   grid-template-rows:auto 1fr;
+  right:16px;
+  bottom:16px;
   transition:box-shadow .2s, opacity .3s;
 }
 #music-player:hover{

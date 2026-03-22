@@ -535,9 +535,20 @@
     return !!(player.style.left && player.style.top);
   }
 
+  function clampExplicitPlayerPosition(){
+    if(!hasExplicitPlayerPosition()) return;
+    const maxX=Math.max(0, window.innerWidth-player.offsetWidth);
+    const maxY=Math.max(0, window.innerHeight-player.offsetHeight);
+    const x=Math.max(0, Math.min(maxX, parseFloat(player.style.left)||0));
+    const y=Math.max(0, Math.min(maxY, parseFloat(player.style.top)||0));
+    player.style.left=x+'px';
+    player.style.top =y+'px';
+  }
+
   function restoreState(st){
     if(!st) return;
     if(st.posX && st.posY){player.style.right='auto';player.style.bottom='auto';player.style.left=st.posX;player.style.top=st.posY;}
+    clampExplicitPlayerPosition();
     setVolume(st.volume??0.75);
     if(st.isShuffle){isShuffle=true;elShuffle.style.color='var(--accent,#7eaaff)';}
     if(st.isRepeat) {isRepeat=true; elRepeat.style.color='var(--accent,#7eaaff)';audio.loop=true;}
@@ -650,13 +661,12 @@
   /* ResizeObserver：播放器尺寸变化时（展开/收起动画过程中持续触发）自动校正位置 */
   new ResizeObserver(()=>{
     if(isDragging || !hasExplicitPlayerPosition()) return; // 默认停靠右下角时不改写为 0,0
-    const x0 = parseFloat(player.style.left) || 0;
-    const y0 = parseFloat(player.style.top)  || 0;
-    const x  = Math.max(0, Math.min(window.innerWidth  - player.offsetWidth,  x0));
-    const y  = Math.max(0, Math.min(window.innerHeight - player.offsetHeight, y0));
-    player.style.left = x + 'px';
-    player.style.top  = y + 'px';
+    clampExplicitPlayerPosition();
   }).observe(player);
+
+  window.addEventListener('resize',()=>{
+    clampExplicitPlayerPosition();
+  });
 
   elCollapse.addEventListener('click',e=>{
     e.stopPropagation(); isCollapsed=!isCollapsed;
