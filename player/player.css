@@ -1,6 +1,8 @@
 /* ── 音乐播放器 ───────────────────────────── */
 #music-player{
   position:fixed; z-index:900;
+  right:24px;
+  bottom:24px;
   width:300px;
   background:var(--surface);
   border:1px solid var(--border2);
