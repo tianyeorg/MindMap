@@ -649,7 +649,7 @@
 
   /* ResizeObserver：播放器尺寸变化时（展开/收起动画过程中持续触发）自动校正位置 */
   new ResizeObserver(()=>{
-    if(isDragging || !hasExplicitPlayerPosition()) return; // 默认停靠右下角时不改写为 0,0
+    if(isDragging || !hasExplicitPlayerPosition()) return; // 默认停靠左下角或首帧记忆位置时不改写
     const x0 = parseFloat(player.style.left) || 0;
     const y0 = parseFloat(player.style.top)  || 0;
     const x  = Math.max(0, Math.min(window.innerWidth  - player.offsetWidth,  x0));
