@@ -347,6 +347,24 @@ body::before{
 
 <!-- 音乐播放器 -->
  <div id="toast-container" class="toast-container"></div>
+<script>
+(() => {
+  const root = document.documentElement;
+  root.style.setProperty('--music-player-left', '24px');
+  root.style.setProperty('--music-player-top', 'auto');
+  root.style.setProperty('--music-player-right', 'auto');
+  root.style.setProperty('--music-player-bottom', '24px');
+  try {
+    const st = JSON.parse(sessionStorage.getItem('musicPlayerState') || 'null');
+    if (st?.posX && st?.posY) {
+      root.style.setProperty('--music-player-left', st.posX);
+      root.style.setProperty('--music-player-top', st.posY);
+      root.style.setProperty('--music-player-right', 'auto');
+      root.style.setProperty('--music-player-bottom', 'auto');
+    }
+  } catch (e) {}
+})();
+</script>
 <div id="music-player">
   <div class="mp-drag" id="mp-drag">
     <div class="mp-title-row">

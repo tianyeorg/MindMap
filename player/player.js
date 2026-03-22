@@ -531,9 +531,13 @@
     }catch(e){}
   });
 
+  function hasExplicitPlayerPosition(){
+    return !!(player.style.left && player.style.top);
+  }
+
   function restoreState(st){
     if(!st) return;
-    if(st.posX){player.style.right='auto';player.style.bottom='auto';player.style.left=st.posX;player.style.top=st.posY;}
+    if(st.posX && st.posY){player.style.right='auto';player.style.bottom='auto';player.style.left=st.posX;player.style.top=st.posY;}
     setVolume(st.volume??0.75);
     if(st.isShuffle){isShuffle=true;elShuffle.style.color='var(--accent,#7eaaff)';}
     if(st.isRepeat) {isRepeat=true; elRepeat.style.color='var(--accent,#7eaaff)';audio.loop=true;}
@@ -645,7 +649,7 @@
 
   /* ResizeObserver：播放器尺寸变化时（展开/收起动画过程中持续触发）自动校正位置 */
   new ResizeObserver(()=>{
-    if(isDragging) return;                          // 拖拽中不干预
+    if(isDragging || !hasExplicitPlayerPosition()) return; // 默认停靠左下角或首帧记忆位置时不改写
     const x0 = parseFloat(player.style.left) || 0;
     const y0 = parseFloat(player.style.top)  || 0;
     const x  = Math.max(0, Math.min(window.innerWidth  - player.offsetWidth,  x0));
@@ -704,12 +708,6 @@
 
     let st;
     try{ st=JSON.parse(sessionStorage.getItem(PKEY)); }catch(e){}
-
-    // 没有保存的位置时，设置默认右下角位置（用 left/top 表达）
-    if(!st?.posX){
-      player.style.left=(window.innerWidth  - player.offsetWidth  - 24)+'px';
-      player.style.top =(window.innerHeight - player.offsetHeight - 24)+'px';
-    }
 
     restoreState(st);
   }
