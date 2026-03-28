@@ -638,18 +638,31 @@
   audio.addEventListener('ended',()=>{ if(!isRepeat) nextTrack(); });
   audio.addEventListener('loadedmetadata',()=>{ elDur.textContent=fmt(audio.duration); });
 
-  elBar.addEventListener('click',e=>{
+  function getEventClientX(e){
+    if(typeof e.clientX==='number') return e.clientX;
+    if(e.touches?.length) return e.touches[0].clientX;
+    if(e.changedTouches?.length) return e.changedTouches[0].clientX;
+    return 0;
+  }
+  function seekByClientX(clientX){
     if(!audio.duration)return;
     const r=elBar.getBoundingClientRect();
-    audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration;
-  });
+    audio.currentTime=((clientX-r.left)/r.width)*audio.duration;
+  }
+  elBar.addEventListener('click',e=>seekByClientX(getEventClientX(e)));
+  elBar.addEventListener('pointerdown',e=>{ seekByClientX(getEventClientX(e)); e.preventDefault(); });
 
   function setVolume(v){
     audio.volume=Math.max(0,Math.min(1,v));
     elVolFill.style.width=(audio.volume*100)+'%';
     elVolIcon.textContent=audio.volume===0?'🔇':audio.volume<0.5?'🔈':'🔉';
   }
-  elVolBar.addEventListener('click',e=>{ const r=elVolBar.getBoundingClientRect(); setVolume((e.clientX-r.left)/r.width); });
+  function setVolumeByClientX(clientX){
+    const r=elVolBar.getBoundingClientRect();
+    setVolume((clientX-r.left)/r.width);
+  }
+  elVolBar.addEventListener('click',e=>setVolumeByClientX(getEventClientX(e)));
+  elVolBar.addEventListener('pointerdown',e=>{ setVolumeByClientX(getEventClientX(e)); e.preventDefault(); });
   elVolIcon.addEventListener('click',()=>setVolume(audio.volume>0?0:0.75));
 
   /* ══ 播放列表 ══ */
@@ -706,26 +719,47 @@
 
   /* ══ 拖拽 ══ */
   const dragHandle=document.getElementById('mp-drag');
-  let dragOffX=0,dragOffY=0;
-  dragHandle.addEventListener('mousedown',e=>{
+  let dragOffX=0,dragOffY=0,activeDragPointerId=null;
+  function getEventClientY(e){
+    if(typeof e.clientY==='number') return e.clientY;
+    if(e.touches?.length) return e.touches[0].clientY;
+    if(e.changedTouches?.length) return e.changedTouches[0].clientY;
+    return 0;
+  }
+  function startPlayerDrag(e){
     if(e.target.closest('button')||e.target.closest('label')) return;
     isDragging=true; player.classList.add('dragging-player');
     const r=player.getBoundingClientRect();
-    dragOffX=e.clientX-r.left; dragOffY=e.clientY-r.top;
+    const clientX=getEventClientX(e), clientY=getEventClientY(e);
+    dragOffX=clientX-r.left; dragOffY=clientY-r.top;
     player.style.right='auto'; player.style.bottom='auto';
     player.style.left=r.left+'px'; player.style.top=r.top+'px';
+    if(typeof e.pointerId==='number'){
+      activeDragPointerId=e.pointerId;
+      dragHandle.setPointerCapture?.(e.pointerId);
+    }
     e.preventDefault();
-  });
-  document.addEventListener('mousemove',e=>{
+  }
+  function movePlayerDrag(e){
     if(!isDragging)return;
-    player.style.left=Math.max(0,Math.min(window.innerWidth-player.offsetWidth,  e.clientX-dragOffX))+'px';
-    player.style.top =Math.max(0,Math.min(window.innerHeight-player.offsetHeight,e.clientY-dragOffY))+'px';
-  });
+    if(activeDragPointerId!==null && typeof e.pointerId==='number' && e.pointerId!==activeDragPointerId) return;
+    if(e.cancelable) e.preventDefault();
+    const clientX=getEventClientX(e), clientY=getEventClientY(e);
+    player.style.left=Math.max(0,Math.min(window.innerWidth-player.offsetWidth,  clientX-dragOffX))+'px';
+    player.style.top =Math.max(0,Math.min(window.innerHeight-player.offsetHeight, clientY-dragOffY))+'px';
+  }
   function stopDrag(){
     if(!isDragging) return;
     isDragging=false;
+    activeDragPointerId=null;
     player.classList.remove('dragging-player');
   }
+  dragHandle.addEventListener('pointerdown', startPlayerDrag);
+  document.addEventListener('pointermove', movePlayerDrag);
+  document.addEventListener('pointerup', stopDrag);
+  dragHandle.addEventListener('touchstart', startPlayerDrag, {passive:false});
+  document.addEventListener('touchmove', movePlayerDrag, {passive:false});
+  document.addEventListener('touchend', stopDrag);
   document.addEventListener('mouseup', stopDrag);
   // 鼠标移出窗口后松开再移回来也能正确停止拖拽
   window.addEventListener('blur', stopDrag);
