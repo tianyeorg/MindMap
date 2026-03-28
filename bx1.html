@@ -651,6 +651,7 @@ svg{ opacity:0; animation:svgIn .6s var(--ease-snap) .1s forwards; }
         <button class="cp-apply" id="searchKeyword">搜索</button>
       </div>
       <div class="cp-checks">
+        <label class="cp-check"><input type="checkbox" id="autoFitToggle"><span class="cp-box"></span>自动缩放</label>
         <label class="cp-check"><input type="checkbox" id="matchAll"><span class="cp-box"></span>全部包含</label>
         <label class="cp-check"><input type="checkbox" id="importantOnly"><span class="cp-box"></span>只看重点</label>
         <label class="cp-check"><input type="checkbox" id="cutToMatch"><span class="cp-box"></span>截断到匹配</label>
@@ -750,7 +751,7 @@ svg{ opacity:0; animation:svgIn .6s var(--ease-snap) .1s forwards; }
 
   const options={
     duration:400,spacingVertical:18,spacingHorizontal:140,
-    autoFit:true,paddingX:40,initialExpandLevel:Infinity
+    autoFit:false,paddingX:40,initialExpandLevel:Infinity
   };
   window.mm=markmap.Markmap.create("#mindmap",options,data);
   const originalData=JSON.parse(JSON.stringify(data));
@@ -922,6 +923,11 @@ svg{ opacity:0; animation:svgIn .6s var(--ease-snap) .1s forwards; }
     mm.setData(d);
     setTimeout(()=>{attachEvents();cleanFavs();},450);
   }
+  function setAutoFitEnabled(enabled){
+    const next=!!enabled;
+    if(typeof mm.setOptions==='function')mm.setOptions({...mm.options,autoFit:next});
+    else mm.options={...(mm.options||{}),autoFit:next};
+  }
 
   /* ══ 节点事件 ══ */
   function attachEvents(){
@@ -952,6 +958,10 @@ svg{ opacity:0; animation:svgIn .6s var(--ease-snap) .1s forwards; }
   function toggle(id){const g=document.getElementById(id);const was=g.classList.contains('open');closeAll();if(!was)g.classList.add('open');}
 
   document.querySelector('#expand-control .control-btn').onclick=()=>toggle('expand-control');
+  const autoFitToggle=document.getElementById('autoFitToggle');
+  autoFitToggle.checked=false;
+  setAutoFitEnabled(false);
+  autoFitToggle.onchange=()=>setAutoFitEnabled(autoFitToggle.checked);
   document.querySelector('#favorites-control .control-btn').onclick=()=>toggle('favorites-control');
   document.addEventListener('mousedown',e=>{
     if(!expCtrl.contains(e.target)&&!favCtrl.contains(e.target))closeAll();
