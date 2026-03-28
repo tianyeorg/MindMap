@@ -1,0 +1,1385 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>政治必修四</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/markmap-toolbar@0.18.12/dist/style.css">
+<style>
+:root{
+  --bg:        #080b10;
+  --surface:   #111620;
+  --surface2:  #161c28;
+  --surface3:  #1c2333;
+  --border:    rgba(255,255,255,.055);
+  --border2:   rgba(255,255,255,.1);
+  --text:      #ffffff;
+  --text2:     rgb(255, 255, 255);
+  --text3:     rgb(255, 255, 255);
+  --accent:    #7eaaff;
+  --accent2:   #a78bff;
+  --accent-glow: rgba(126,170,255,.18);
+  --accent-soft: rgba(126,170,255,.12);
+  --danger:    #f87171;
+  --danger-soft: rgba(248,113,113,.12);
+  --line:      rgba(255,255,255,.38);
+  --ease-out:  cubic-bezier(.22,.68,0,1.2);
+  --ease-soft: cubic-bezier(.25,.8,.25,1);
+  --ease-snap: cubic-bezier(.4,0,.2,1);
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; }
+
+html,body{
+  height:100%; background:var(--bg);
+  font-family:"Georgia","Noto Serif SC","Source Han Serif SC",serif;
+  color:var(--text); overflow:auto;
+  -webkit-font-smoothing:antialiased;
+  scrollbar-width:none;        /* Firefox */
+  -ms-overflow-style:none;     /* IE/Edge */
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar{ display:none; } /* Chrome/Safari */
+
+/* ── 思维导图 ─────────────────────────────── */
+#mindmap{ width:100vw; height:100vh; overflow:visible; }
+.markmap-node text{ fill:var(--text); font-size:15px; }
+.markmap-node div{
+  max-width:300px; line-height:1.65;
+  word-break:break-word; overflow:visible; color:var(--text);
+}
+.markmap-link{ stroke:var(--line); stroke-width:1.1; }
+.markmap-node:hover text{ fill:var(--accent); }
+.markmap-node foreignObject{ overflow:visible; }
+.markmap-node.highlighted text{ fill:var(--accent)!important; font-weight:700; }
+.markmap-node.highlighted circle{ fill:var(--accent); stroke:var(--accent); }
+.markmap-node.highlighted{ filter:drop-shadow(0 0 12px rgba(126,170,255,.55)); }
+.markmap-link.highlighted-path{ stroke:var(--accent); stroke-width:2.5; stroke-opacity:1; }
+svg{ opacity:0; animation:svgIn .6s var(--ease-snap) .1s forwards; }
+@keyframes svgIn{ from{opacity:0} to{opacity:1} }
+
+/* ── 底部控制栏 ───────────────────────────── */
+.global-controls{
+  position:fixed; bottom:24px; left:24px;
+  display:flex; gap:10px; z-index:800;
+}
+.control-group{ position:relative; }
+
+.control-btn{
+  display:flex; align-items:center; gap:7px;
+  background:var(--surface);
+  border:1px solid var(--border2);
+  padding:9px 16px; border-radius:14px;
+  color:var(--text2); cursor:pointer; font-size:13px;
+  font-family:inherit;
+  backdrop-filter:blur(20px);
+  box-shadow:0 4px 24px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.05);
+  transition:color .2s, border-color .2s, background .2s, transform .15s, box-shadow .2s;
+  letter-spacing:.01em;
+}
+.control-btn:hover{
+  color:var(--accent); border-color:rgba(126,170,255,.4);
+  background:var(--surface2); transform:translateY(-1px);
+  box-shadow:0 6px 32px rgba(0,0,0,.5), 0 0 0 1px rgba(126,170,255,.1);
+}
+.btn-icon{ font-size:14px; opacity:.65; transition:opacity .2s; }
+.control-btn:hover .btn-icon{ opacity:1; }
+
+.control-panel{
+  position:absolute; bottom:calc(100% + 10px); left:0;
+  width:248px; background:var(--surface);
+  border-radius:18px; padding:10px;
+  display:flex; flex-direction:column; gap:2px;
+  border:1px solid var(--border2);
+  backdrop-filter:blur(24px);
+  box-shadow:0 24px 72px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.03);
+  opacity:0; transform:translateY(12px) scale(.95);
+  pointer-events:none;
+  transition:opacity .26s var(--ease-soft), transform .26s var(--ease-soft);
+  transform-origin:bottom left;
+}
+.control-group.open .control-panel{
+  opacity:1; transform:translateY(0) scale(1); pointer-events:auto;
+}
+.control-panel button{
+  background:transparent; border:none;
+  padding:8px 12px; text-align:left; border-radius:9px;
+  color:var(--text2); cursor:pointer; font-size:13px;
+  font-family:inherit; letter-spacing:.01em;
+  transition:background .15s, color .15s, padding-left .2s;
+}
+.control-panel button:hover{
+  background:var(--accent-soft); color:var(--accent); padding-left:17px;
+}
+.cp-divider{ height:1px; background:var(--border); margin:5px 2px; }
+
+.cp-row{ display:flex; gap:6px; padding:3px 2px; }
+.cp-row input{
+  flex:1; background:var(--surface3); border:1px solid var(--border);
+  border-radius:8px; padding:6px 9px; color:var(--text); font-size:12.5px;
+  outline:none; font-family:inherit;
+  transition:border-color .18s, background .18s;
+}
+.cp-row input:focus{ border-color:rgba(126,170,255,.45); background:rgba(126,170,255,.07); }
+#keywordInput, #customLevel{ color:#b8ceff; }
+#keywordInput::placeholder, #customLevel::placeholder{ color:rgba(255, 255, 255, 0.60); }
+.cp-apply{
+  padding:6px 10px!important; font-size:12px!important;
+  background:var(--surface3)!important; color:var(--text2)!important;
+  border:1px solid var(--border)!important; border-radius:8px!important;
+  cursor:pointer!important; font-family:inherit!important;
+  transition:.18s!important; letter-spacing:0!important;
+}
+.cp-apply:hover{
+  background:var(--accent-soft)!important; color:var(--accent)!important;
+  border-color:rgba(126,170,255,.4)!important;
+}
+
+.cp-checks{ display:flex; flex-direction:column; gap:1px; padding:2px; }
+.cp-check{
+  display:flex; align-items:center; gap:8px; cursor:pointer;
+  font-size:12.5px; color:var(--text2); padding:6px 10px;
+  border-radius:8px; user-select:none;
+  transition:background .15s, color .15s;
+}
+.cp-check:hover{ background:var(--surface3); color:var(--text); }
+.cp-check input{ display:none; }
+.cp-box{
+  width:14px; height:14px; border-radius:4px; flex-shrink:0;
+  border:1.5px solid rgba(255,255,255,.2); background:transparent;
+  position:relative; transition:.18s;
+}
+.cp-check:hover .cp-box{ border-color:var(--accent); }
+.cp-check input:checked+.cp-box{
+  background:var(--accent); border-color:var(--accent);
+  box-shadow:0 0 10px rgba(126,170,255,.4);
+}
+.cp-check input:checked+.cp-box::after{
+  content:""; position:absolute;
+  left:3px; top:0; width:4px; height:8px;
+  border:solid white; border-width:0 2px 2px 0;
+  transform:rotate(45deg);
+}
+
+/* ── 右键菜单 ─────────────────────────────── */
+.context-menu{
+  position:fixed; z-index:9999;
+  background:var(--surface); border:1px solid var(--border2);
+  border-radius:14px; padding:6px;
+  box-shadow:0 16px 48px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.04);
+  backdrop-filter:blur(20px);
+  display:flex; flex-direction:column; gap:2px;
+  opacity:0; transform:scale(.93) translateY(6px);
+  visibility:hidden; pointer-events:none;
+  transition:
+    opacity .22s var(--ease-soft),
+    transform .22s var(--ease-soft),
+    visibility 0s linear .22s;
+  transform-origin:top left;
+}
+.context-menu.show{
+  opacity:1; transform:scale(1) translateY(0);
+  visibility:visible; pointer-events:auto;
+  transition:
+    opacity .22s var(--ease-soft),
+    transform .22s var(--ease-soft),
+    visibility 0s linear 0s;
+}
+.ctx-label{
+  padding:4px 14px 5px; font-size:10.5px;
+  letter-spacing:.1em; color:var(--text3); text-transform:uppercase;
+}
+.ctx-btn{
+  background:transparent; border:none;
+  padding:9px 14px; text-align:left; border-radius:8px;
+  color:var(--text2); font-size:13px; font-family:inherit;
+  cursor:pointer; white-space:nowrap; letter-spacing:.01em;
+  transition:background .15s, color .15s, padding-left .18s;
+}
+.ctx-btn:hover{ background:var(--accent-soft); color:var(--accent); padding-left:18px; }
+
+/* ── Toast ───────────────────────────────── */
+.toast-container{
+  position:fixed; top:20px; right:20px;
+  display:flex; flex-direction:column; gap:8px;
+  z-index:10001; pointer-events:none;
+}
+.toast{
+  display:flex; align-items:center; gap:10px;
+  background:var(--surface2); border:1px solid var(--border);
+  padding:11px 16px; border-radius:13px;
+  color:var(--text2); font-size:13px;
+  box-shadow:0 8px 32px rgba(0,0,0,.5); backdrop-filter:blur(16px);
+  opacity:0; transform:translateX(16px) translateY(-4px);
+  transition:all .3s var(--ease-out);
+  pointer-events:auto; max-width:300px;
+}
+.toast.show{ opacity:1; transform:translateX(0) translateY(0); }
+.toast-dot{ width:6px; height:6px; border-radius:50%; flex-shrink:0; background:var(--text3); }
+.toast.danger{ border-color:rgba(248,113,113,.3); }
+.toast.danger .toast-dot{ background:var(--danger); box-shadow:0 0 8px rgba(248,113,113,.5); }
+.toast.success{ border-color:rgba(126,170,255,.25); }
+.toast.success .toast-dot{ background:var(--accent); box-shadow:0 0 8px rgba(126,170,255,.5); }
+
+/* ── 弹窗遮罩 ─────────────────────────────── */
+#fav-modal{
+  position:fixed; inset:0;
+  background:rgba(4,6,12,.82);
+  backdrop-filter:blur(18px) saturate(1.2);
+  display:none; align-items:center; justify-content:center;
+  z-index:10000; opacity:0;
+  transition:opacity .28s var(--ease-snap);
+}
+#fav-modal.show{ display:flex; opacity:1; }
+
+/* ── 弹窗主体 ─────────────────────────────── */
+.fav-modal-box{
+  background:var(--surface);
+  border-radius:24px;
+  width:min(92vw, 860px); height:min(88vh, 640px);
+  display:flex; flex-direction:column;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.07),
+    0 40px 100px rgba(0,0,0,.82),
+    0 0 140px rgba(126,170,255,.04);
+  overflow:hidden;
+  transform:scale(.9) translateY(36px); opacity:0;
+  transition:transform .36s var(--ease-out), opacity .36s var(--ease-out);
+}
+#fav-modal.show .fav-modal-box{ transform:scale(1) translateY(0); opacity:1; }
+
+/* 弹窗头部 */
+.fav-head{
+  display:flex; align-items:center; gap:12px;
+  padding:20px 22px 16px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+  background:linear-gradient(180deg,rgba(22,28,40,.6) 0%,transparent 100%);
+}
+.fav-head-icon{
+  width:32px; height:32px; border-radius:9px;
+  background:var(--accent-soft); border:1px solid rgba(126,170,255,.2);
+  display:flex; align-items:center; justify-content:center;
+  font-size:15px; flex-shrink:0; color:var(--accent);
+}
+.fav-head h2{
+  flex:1; font-size:16px; font-weight:normal;
+  letter-spacing:.02em; color:var(--text);
+}
+.fav-close{
+  width:30px; height:30px;
+  background:none; border:none; color:var(--text3);
+  font-size:18px; cursor:pointer; border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .18s, color .18s, transform .22s;
+}
+.fav-close:hover{ background:var(--surface3); color:var(--text); transform:rotate(90deg); }
+
+/* 弹窗内容 */
+.fav-body{ display:flex; flex:1; overflow:hidden; }
+
+/* ── 左侧分组 ────────────────────────────── */
+.fav-sidebar{
+  width:190px; flex-shrink:0;
+  display:flex; flex-direction:column;
+  border-right:1px solid var(--border);
+  padding:12px 10px 14px; gap:2px;
+  overflow-y:auto;
+  background:rgba(0,0,0,.15);
+}
+.fav-sidebar::-webkit-scrollbar{ width:3px; }
+.fav-sidebar::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.08); border-radius:2px; }
+
+.sidebar-label{
+  font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--text3); padding:2px 8px 9px;
+}
+
+.group-item{
+  display:flex; align-items:center; gap:7px;
+  padding:7px 9px; border-radius:9px;
+  cursor:pointer; position:relative;
+  color:var(--text2); font-size:13px; min-height:34px;
+  transition:background .18s, color .18s;
+}
+.group-item:hover{ background:var(--surface3); color:var(--text); }
+.group-item.active{ background:var(--accent-soft); color:var(--accent); }
+.group-item.active::before{
+  content:""; position:absolute; left:0; top:50%;
+  transform:translateY(-50%);
+  width:2px; height:56%; background:var(--accent);
+  border-radius:0 2px 2px 0; box-shadow:0 0 8px rgba(126,170,255,.6);
+}
+.g-label{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.g-inline-input{
+  flex:1; background:rgba(126,170,255,.1);
+  border:1px solid rgba(126,170,255,.45);
+  border-radius:6px; padding:2px 7px;
+  color:var(--text); font-size:12.5px;
+  outline:none; font-family:inherit;
+}
+.g-count{
+  font-size:11px; padding:1px 6px; border-radius:999px;
+  background:rgba(255,255,255,.06); color:var(--text3); flex-shrink:0;
+  transition:.18s;
+}
+.group-item.active .g-count{ background:rgba(126,170,255,.2); color:var(--accent); }
+.g-acts{ display:none; gap:1px; flex-shrink:0; }
+.group-item:hover .g-acts,
+.group-item.active .g-acts{ display:flex; }
+.g-act{
+  width:22px; height:22px; background:none; border:none;
+  color:var(--text3); cursor:pointer; border-radius:5px; font-size:11px;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .15s, color .15s;
+}
+.g-act:hover{ background:rgba(126,170,255,.15); color:var(--accent); }
+.g-act.del:hover{ background:var(--danger-soft); color:var(--danger); }
+
+.g-add-btn{
+  display:flex; align-items:center; gap:7px;
+  padding:7px 9px; border-radius:9px;
+  background:none; border:1px dashed rgba(126,170,255,.2);
+  color:rgba(126,170,255,.45); font-size:12.5px;
+  cursor:pointer; width:100%; text-align:left;
+  font-family:inherit; margin-top:6px;
+  transition:background .18s, color .18s, border-color .18s;
+}
+.g-add-btn:hover{
+  background:var(--accent-soft); color:var(--accent);
+  border-color:rgba(126,170,255,.45);
+}
+
+.g-add-row{
+  display:none; align-items:center; gap:5px;
+  padding:4px 2px; margin-top:4px;
+}
+.g-add-row.open{ display:flex; }
+.g-add-row input{
+  flex:1; background:rgba(126,170,255,.07);
+  border:1px solid rgba(126,170,255,.45);
+  border-radius:8px; padding:5px 8px;
+  color:var(--text); font-size:12.5px;
+  outline:none; font-family:inherit;
+}
+.g-add-ok{
+  width:26px; height:26px; flex-shrink:0;
+  background:var(--accent); border:none; border-radius:6px;
+  color:#05090f; font-size:13px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .15s, transform .12s;
+}
+.g-add-ok:hover{ background:#9dc0ff; transform:scale(1.06); }
+.g-add-cancel{
+  width:26px; height:26px; flex-shrink:0;
+  background:none; border:none; color:var(--text3);
+  font-size:16px; cursor:pointer; border-radius:6px;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .15s, color .15s;
+}
+.g-add-cancel:hover{ background:var(--danger-soft); color:var(--danger); }
+
+/* 删除确认浮层 */
+.del-overlay{
+  position:absolute; inset:0; border-radius:9px;
+  background:rgba(8,11,16,.93); backdrop-filter:blur(5px);
+  display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:8px; z-index:10; padding:8px;
+  opacity:0; pointer-events:none; transition:opacity .18s;
+}
+.del-overlay.open{ opacity:1; pointer-events:auto; }
+.del-overlay p{
+  font-size:11.5px; color:var(--text2);
+  text-align:center; line-height:1.55;
+}
+.del-overlay-btns{ display:flex; gap:5px; }
+.del-overlay-btns button{
+  padding:4px 11px; border-radius:6px; font-size:11.5px;
+  cursor:pointer; border:none; font-family:inherit; transition:.15s;
+}
+.d-ok{ background:rgba(248,113,113,.2); color:#fca5a5; }
+.d-ok:hover{ background:rgba(248,113,113,.38); }
+.d-no{ background:var(--surface3); color:var(--text2); }
+.d-no:hover{ background:var(--border2); }
+
+/* ── 右侧主内容 ──────────────────────────── */
+.fav-main{
+  flex:1; display:flex; flex-direction:column;
+  overflow:hidden; padding:14px 18px 18px;
+}
+
+/* 工具栏 */
+.fav-bar{
+  display:flex; gap:7px; align-items:center;
+  flex-shrink:0; margin-bottom:12px; flex-wrap:wrap;
+}
+.fav-search{
+  flex:1; min-width:110px; background:var(--surface3);
+  border:1px solid var(--border); border-radius:9px;
+  padding:7px 11px; color:var(--text); font-size:13px;
+  outline:none; font-family:inherit;
+  transition:border-color .18s, background .18s;
+}
+.fav-search::placeholder{ color:var(--text3); }
+.fav-search:focus{ border-color:rgba(126,170,255,.4); background:rgba(126,170,255,.06); }
+
+.tb-btn{
+  padding:6px 11px; border-radius:8px;
+  border:1px solid var(--border); background:transparent;
+  color:var(--text2); cursor:pointer; font-size:12px;
+  font-family:inherit; white-space:nowrap;
+  transition:background .18s, color .18s, border-color .18s, transform .12s;
+}
+.tb-btn:hover{
+  background:var(--accent-soft); color:var(--accent);
+  border-color:rgba(126,170,255,.35); transform:translateY(-1px);
+}
+.tb-btn.active{
+  background:var(--accent-soft); color:var(--accent);
+  border-color:rgba(126,170,255,.35);
+}
+.layout-grp{ display:flex; gap:3px; }
+.layout-grp button{
+  padding:6px 10px; border-radius:8px;
+  border:1px solid var(--border); background:transparent;
+  color:var(--text3); cursor:pointer; font-size:12px;
+  font-family:inherit; transition:background .18s, color .18s, border-color .18s;
+}
+.layout-grp button.active{
+  background:var(--accent-soft); color:var(--accent);
+  border-color:rgba(126,170,255,.35);
+}
+
+/* 滚动容器 */
+.fav-scroll{
+  flex:1; overflow-y:auto; overflow-x:hidden;
+}
+.fav-scroll::-webkit-scrollbar{ width:3px; }
+.fav-scroll::-webkit-scrollbar-track{ background:transparent; }
+.fav-scroll::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.1); border-radius:2px; }
+
+/* 列表 */
+.fav-list{ display:grid; gap:8px; }
+.fav-list.one-col{ grid-template-columns:1fr; }
+.fav-list.two-col{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+
+@keyframes slideR{ from{opacity:0;transform:translateX(14px)} to{opacity:1;transform:translateX(0)} }
+@keyframes slideL{ from{opacity:0;transform:translateX(-14px)} to{opacity:1;transform:translateX(0)} }
+.fav-list.anim-r{ animation:slideR .22s var(--ease-soft) both; }
+.fav-list.anim-l{ animation:slideL .22s var(--ease-soft) both; }
+
+/* 条目 */
+.fav-item{
+  display:flex; align-items:center; gap:9px;
+  padding:10px 12px; border-radius:12px;
+  background:var(--surface2); border:1px solid transparent;
+  cursor:grab; user-select:none;
+  transition:background .18s, border-color .18s, transform .2s, box-shadow .2s;
+}
+.fav-item:hover{
+  background:rgba(126,170,255,.07);
+  border-color:rgba(126,170,255,.14);
+  transform:translateY(-1px);
+  box-shadow:0 4px 20px rgba(0,0,0,.3);
+}
+.fav-item.dragging{ opacity:.4; transform:scale(.96); cursor:grabbing; box-shadow:none!important; }
+.fav-item.drag-over{
+  border-color:var(--accent)!important;
+  background:rgba(126,170,255,.1)!important;
+}
+.drag-handle{
+  cursor:grab; opacity:.22; font-size:14px;
+  flex-shrink:0; letter-spacing:-1px; line-height:1;
+  transition:opacity .18s, color .18s;
+}
+.fav-item:hover .drag-handle{ opacity:.65; color:var(--accent); }
+
+.fav-item input[type="checkbox"]{
+  width:15px; height:15px; accent-color:var(--accent);
+  cursor:pointer; flex-shrink:0;
+}
+.fav-content{
+  flex:1; font-size:13px; line-height:1.45;
+  word-break:break-all; color:var(--text);
+}
+.fav-item-right{
+  display:flex; align-items:center; gap:6px; flex-shrink:0;
+}
+.fav-grp-sel{
+  background:var(--surface3); border:1px solid var(--border);
+  border-radius:6px; padding:3px 6px;
+  color:var(--text2); font-size:11.5px;
+  outline:none; cursor:pointer; font-family:inherit;
+  max-width:78px;
+  transition:border-color .18s, color .18s, background .18s;
+}
+.fav-grp-sel:hover,.fav-grp-sel:focus{
+  border-color:rgba(126,170,255,.4); color:var(--accent);
+  background:rgba(126,170,255,.08);
+}
+.fav-grp-sel option{ background:#1c2333; color:var(--text); }
+
+.type-pill{
+  font-size:11px; padding:2px 8px; border-radius:999px;
+  background:rgba(167,139,255,.1); color:rgba(167,139,255,.75);
+  white-space:nowrap; flex-shrink:0; letter-spacing:.02em;
+}
+
+/* 空态 */
+.fav-empty{
+  text-align:center; color:var(--text3);
+  padding:52px 0 20px; font-size:13px; line-height:2;
+}
+.fav-empty-icon{ font-size:26px; display:block; margin-bottom:8px; opacity:.35; }
+
+/* 底部按钮 */
+.fav-actions{
+  display:flex; gap:10px; margin-top:14px; flex-shrink:0;
+}
+.fav-actions button{
+  flex:1; padding:11px; border:none; border-radius:13px;
+  font-size:13.5px; cursor:pointer; font-family:inherit;
+  letter-spacing:.02em;
+  transition:background .2s, transform .15s, box-shadow .2s;
+}
+.fav-show-btn{
+  background:var(--accent); color:#05090f;
+  box-shadow:0 4px 20px rgba(126,170,255,.25);
+}
+.fav-show-btn:hover{
+  background:#a0c0ff; transform:translateY(-1px);
+  box-shadow:0 6px 28px rgba(126,170,255,.38);
+}
+.fav-del-btn{
+  background:var(--danger-soft); color:#fca5a5;
+  border:1px solid rgba(248,113,113,.18)!important;
+}
+.fav-del-btn:hover{ background:rgba(248,113,113,.25); transform:translateY(-1px); }
+
+
+/* ── 左上角动作栏 ─────────────────────────── */
+.top-left-actions {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  z-index: 800;
+  display: flex;
+  gap: 10px;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  padding: 10px 18px;
+  border-radius: 14px;
+  color: var(--text2);
+  text-decoration: none; /* 去除链接下划线 */
+  font-size: 13px;
+  font-family: inherit;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 4px 24px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.05);
+  transition: all .2s var(--ease-soft);
+  letter-spacing: .02em;
+}
+
+.back-btn:hover {
+  color: var(--accent);
+  border-color: rgba(126,170,255,.4);
+  background: var(--surface2);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 32px rgba(0,0,0,.5), 0 0 0 1px rgba(126,170,255,.1);
+}
+
+.back-btn .btn-icon {
+  font-size: 16px;
+  opacity: .7;
+  transition: transform .3s var(--ease-out);
+}
+
+.back-btn:hover .btn-icon {
+  opacity: 1;
+  transform: translateX(-3px); /* 悬停时箭头微动 */
+}
+
+/* 适配移动端 */
+@media (max-width: 600px) {
+  .top-left-actions { top: 16px; left: 16px; }
+  .back-btn { padding: 8px 14px; font-size: 12px; }
+}
+</style>
+</head>
+<body>
+<!-- 左上角返回按钮 -->
+<div class="top-left-actions">
+  <a href="index.html" class="back-btn">
+    <span class="btn-icon">⇠</span>
+    <span class="btn-text">返回主页</span>
+  </a>
+</div>
+<svg id="mindmap"></svg>
+<div id="toast-container" class="toast-container"></div>
+
+<!-- 底部控制栏 -->
+<div class="global-controls">
+
+  <div class="control-group" id="expand-control">
+    <button class="control-btn">
+      <span class="btn-icon">⊞</span>展开控制
+    </button>
+    <div class="control-panel">
+      <button data-level="Infinity">展开全部</button>
+      <button data-level="0">收起全部</button>
+      <div class="cp-divider"></div>
+      <button data-level="1">展开 1 层</button>
+      <button data-level="2">展开 2 层</button>
+      <button data-level="3">展开 3 层</button>
+      <button data-level="4">展开 4 层</button>
+      <button data-level="5">展开 5 层</button>
+      <button data-level="6">展开 6 层</button>
+      <div class="cp-divider"></div>
+      <div class="cp-row">
+        <input type="number" min="0" placeholder="自定层级" id="customLevel">
+        <button class="cp-apply" id="applyCustom">应用</button>
+      </div>
+      <div class="cp-divider"></div>
+      <div class="cp-row">
+        <input type="text" placeholder="关键词 空格分隔 - 排除" id="keywordInput">
+        <button class="cp-apply" id="searchKeyword">搜索</button>
+      </div>
+      <div class="cp-checks">
+        <label class="cp-check"><input type="checkbox" id="matchAll"><span class="cp-box"></span>全部包含</label>
+        <label class="cp-check"><input type="checkbox" id="importantOnly"><span class="cp-box"></span>只看重点</label>
+        <label class="cp-check"><input type="checkbox" id="cutToMatch"><span class="cp-box"></span>截断到匹配</label>
+      </div>
+      <div class="cp-divider"></div>
+      <button id="focusTerminal">重点路径</button>
+      <button id="resetTree">恢复结构</button>
+    </div>
+  </div>
+
+  <div class="control-group" id="favorites-control">
+    <button class="control-btn">
+      <span class="btn-icon">☆</span>收藏
+    </button>
+    <div class="control-panel">
+      <button id="fav-show-all">显示全部收藏</button>
+      <div class="cp-divider"></div>
+      <button id="manage-favorites">管理收藏…</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- 右键菜单 -->
+<div id="context-menu" class="context-menu">
+  <div class="ctx-label">添加收藏</div>
+  <button class="ctx-btn" id="ctx-current">📌 当前节点 + 祖先路径</button>
+  <button class="ctx-btn" id="ctx-all">📂 本节点 + 所有子节点</button>
+</div>
+
+<!-- 管理收藏弹窗 -->
+<div id="fav-modal">
+  <div class="fav-modal-box">
+
+    <div class="fav-head">
+      <div class="fav-head-icon">☆</div>
+      <h2>我的收藏</h2>
+      <button class="fav-close" id="fav-close">✕</button>
+    </div>
+
+    <div class="fav-body">
+
+      <!-- 左：分组 -->
+      <div class="fav-sidebar" id="fav-sidebar">
+        <div class="sidebar-label">分组</div>
+        <!-- 动态渲染 -->
+        <div class="g-add-row" id="g-add-row">
+          <input id="g-add-input" placeholder="分组名称…"/>
+          <button class="g-add-ok" id="g-add-ok">✓</button>
+          <button class="g-add-cancel" id="g-add-cancel">✕</button>
+        </div>
+        <button class="g-add-btn" id="btn-add-group">＋ 新建分组</button>
+      </div>
+
+      <!-- 右：内容 -->
+      <div class="fav-main">
+        <div class="fav-bar">
+          <input class="fav-search" id="fav-search" placeholder="搜索收藏…"/>
+          <button class="tb-btn active" id="btn-sort-manual">手动排序</button>
+          <button class="tb-btn" id="btn-sort-name">名称排序</button>
+          <div class="layout-grp">
+            <button class="active" data-layout="one-col">一列</button>
+            <button data-layout="two-col">两列</button>
+          </div>
+        </div>
+        <div class="fav-scroll">
+          <div class="fav-list one-col" id="fav-list"></div>
+        </div>
+        <div class="fav-actions">
+          <button class="fav-show-btn" id="fav-show-selected">在导图中显示选中</button>
+          <button class="fav-del-btn" id="fav-delete-selected">删除选中</button>
+        </div>
+        <div class="fav-io-row">
+          <button class="fav-io-btn" id="fav-export">↑ 导出收藏</button>
+          <label class="fav-io-btn fav-io-import-label" title="导入 JSON 文件">
+            ↓ 导入收藏
+            <input type="file" id="fav-import-input" accept=".json" style="display:none"/>
+          </label>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markmap-view@0.18.12/dist/browser/index.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/markmap-toolbar@0.18.12/dist/index.js"></script>
+<script>
+(()=>{
+  const {markmap}=window;
+
+  /*内容*/
+  const data = {"content":"必修四 哲学与文化","children":[{"content":"第一单元 探索世界与把握规律","children":[{"content":"第一课 时代的精华","children":[{"content":"哲学：","children":[{"content":"分类：","children":[{"content":"古代朴素唯物主义","children":[],"payload":{"lines":"12,13"}},{"content":"近代形而上学唯物主义","children":[],"payload":{"lines":"13,14"}},{"content":"马克思主义（辩证唯物主义和历史唯物主义）","children":[],"payload":{"lines":"14,15"}},{"content":"主观唯心和客观唯心","children":[],"payload":{"lines":"15,17"}}],"payload":{"lines":"10,11"}}],"payload":{"lines":"6,7"}},{"content":"<em><strong>哲学的基本问题、哲学世界观的根本问题（思维和存在的关系）：</strong></em>","children":[{"content":"<em><strong>问题思维和存在谁是本源</strong></em>","children":[],"payload":{"lines":"19,20"}},{"content":"<em><strong>思维和存在有没有同一性</strong></em>","children":[],"payload":{"lines":"20,22"}}],"payload":{"lines":"17,18"}},{"content":"<em><strong>哲学上的两个对子：</strong></em>","children":[{"content":"<em><strong>唯物主义与唯心主义</strong></em>","children":[],"payload":{"lines":"24,25"}},{"content":"<em><strong>辩证法与形而上学</strong></em>","children":[],"payload":{"lines":"25,27"}}],"payload":{"lines":"22,23"}},{"content":"科学的世界观和方法论：","children":[{"content":"马克思主义的基本特征：","children":[{"content":"核心观点：实践观点","children":[],"payload":{"lines":"31,32"}},{"content":"独特理论品质：与时俱进","children":[],"payload":{"lines":"32,34"}}],"payload":{"lines":"29,30"}}],"payload":{"lines":"27,28"}}],"payload":{"lines":"4,5"}},{"content":"第二课 探究世界的本质（唯物论）","children":[{"content":"世界的物质性与规律的客观性","children":[{"content":"世界的物质性：","children":[{"content":"物质的唯一特性是客观实在性（≠客观存在性）","children":[],"payload":{"lines":"40,41"}},{"content":"自然界在本质上物质的，世界真正的统一性在于它的物质性","children":[],"payload":{"lines":"41,43"}}],"payload":{"lines":"38,39"}},{"content":"意识：","children":[{"content":"<em><strong>意识的内容是客观的，形式是主观的</strong></em>","children":[],"payload":{"lines":"45,46"}},{"content":"意识是物质世界长期发展的产物","children":[],"payload":{"lines":"46,47"}},{"content":"意识是人脑的机能","children":[],"payload":{"lines":"47,48"}},{"content":"意识都客观存在，但正确反映了客观事物的意识才是的正确的意识","children":[],"payload":{"lines":"48,49"}},{"content":"对同一事物或现象，不同的人会因各种差异形成不同的意识","children":[],"payload":{"lines":"49,51"}}],"payload":{"lines":"43,44"}},{"content":"运动：","children":[{"content":"物质是运动的物质，运动是物质的运动","children":[],"payload":{"lines":"53,54"}},{"content":"绝对运动，相对静止","children":[],"payload":{"lines":"54,56"}}],"payload":{"lines":"51,52"}},{"content":"规律：","children":[{"content":"联系是事物之间以及事物内部各个要素之间相互依赖、相互影响、相互制约和相互作用","children":[],"payload":{"lines":"58,59"}},{"content":"<em><strong>规律是物质运动过程中固有的、本质的、必然的、稳定的联系</strong></em>","children":[],"payload":{"lines":"59,61"}}],"payload":{"lines":"56,57"}}],"payload":{"lines":"36,37"}},{"content":"正确发挥主观能动性与一切从实际出发","children":[{"content":"主观能动性：","children":[{"content":"<em><strong>目的性</strong></em>","children":[],"payload":{"lines":"65,66"}},{"content":"<em><strong>自觉选择性</strong></em>","children":[],"payload":{"lines":"66,67"}},{"content":"<em><strong>能动创造性</strong></em>","children":[],"payload":{"lines":"67,68"}},{"content":"<em><strong>主观能动性(想、做+状态)&gt;意识的能动作用(想与做)&gt;意识的反作用(做)</strong></em>","children":[],"payload":{"lines":"68,70"}}],"payload":{"lines":"63,64"}},{"content":"物质与意识的辩证关系：","children":[{"content":"物质决定意识","children":[],"payload":{"lines":"72,73"}},{"content":"意识对物质具有能动作用","children":[],"payload":{"lines":"73,75"}}],"payload":{"lines":"70,71"}},{"content":"规律的客观性与主观能动性的辩证关系：尊重规律是发挥能动性的前提","children":[],"payload":{"lines":"75,76"}},{"content":"<em><strong>一切从实际出发、实事求是（唯物论）：</strong></em>","children":[{"content":"<em><strong>原因：物质决定意识，意识对物质有能动的反作用；规律的客观性与普遍性</strong></em>","children":[],"payload":{"lines":"79,80"}},{"content":"<em><strong>做法：一切从实际出发、实事求是，从客观存在的事物出发，找出事物本身固有的而不是臆造的规律</strong></em>","children":[],"payload":{"lines":"80,82"}}],"payload":{"lines":"77,78"}}],"payload":{"lines":"61,62"}}],"payload":{"lines":"34,35"}},{"content":"第三课 把握世界的规律（辩证法）","children":[{"content":"第一课时 世界是永恒联系的","children":[{"content":"联系：","children":[{"content":"<em><strong>普遍性</strong></em>","children":[],"payload":{"lines":"88,89"}},{"content":"<em><strong>客观性</strong></em>","children":[],"payload":{"lines":"89,90"}},{"content":"<em><strong>多样性（强调联系的形式）</strong></em>","children":[],"payload":{"lines":"90,92"}}],"payload":{"lines":"86,87"}},{"content":"系统：","children":[{"content":"<em><strong>整体性</strong></em>","children":[],"payload":{"lines":"94,95"}},{"content":"<em><strong>有序性</strong></em>","children":[],"payload":{"lines":"95,96"}},{"content":"<em><strong>内部结构的优化趋向</strong></em>","children":[],"payload":{"lines":"96,97"}},{"content":"<em><strong>用联系的观点看问题</strong></em>","children":[],"payload":{"lines":"97,99"}}],"payload":{"lines":"92,93"}},{"content":"整体与部分：","children":[{"content":"<em><strong>整体居于主导地位，统帅着部分，具有部分不具有的功能，整体的功能、状态及其变化会影响部分。---&gt;要立足整体、统筹全局，实现整体最有目标</strong></em>","children":[],"payload":{"lines":"101,102"}},{"content":"<em><strong>整体由部分构成，离开了部分整体就不复存在，部分的变化也会影响整体。---&gt;要重视部分的作用，用局部的发展推动整体的发展</strong></em>","children":[],"payload":{"lines":"102,106"}}],"payload":{"lines":"99,100"}}],"payload":{"lines":"84,85"}},{"content":"第二课时 世界是永恒发展的","children":[{"content":"<em><strong>发展：</strong></em>","children":[{"content":"<em><strong>发展的前途是光明的：新事物必将取代违背事物发展必然趋势的旧事物</strong></em>","children":[],"payload":{"lines":"110,111"}},{"content":"<em><strong>道路是曲折的：旧事物往往比较强大，总是顽强抵抗新事物</strong></em>","children":[],"payload":{"lines":"111,113"}}],"payload":{"lines":"108,109"}},{"content":"<em><strong>量变与质变：</strong></em>","children":[{"content":"<em><strong>必修四：</strong></em>","children":[{"content":"<em><strong>事物的发展总是从量变开始，量变是质变的必要准备。---&gt;要重视量的积累</strong></em>","children":[],"payload":{"lines":"117,118"}},{"content":"<em><strong>量变达到一定程度必然引起质变，质变是量变的必然结果。--&gt;要促成事物的质变</strong></em>","children":[],"payload":{"lines":"118,119"}},{"content":"<em><strong>质变又为新的量变开辟道路</strong></em>","children":[],"payload":{"lines":"119,120"}},{"content":"<em><strong>事物的发展是在量变到质变，又在质变的基础上开始新的量变，如此循环往复，不断前进的过程</strong></em>","children":[],"payload":{"lines":"120,122"}}],"payload":{"lines":"115,116"}},{"content":"<em><strong>选修三：</strong></em>","children":[{"content":"<em><strong>量变：连续性与渐进性</strong></em>","children":[],"payload":{"lines":"124,125"}},{"content":"<em><strong>质变：间断性与飞跃性</strong></em>","children":[],"payload":{"lines":"125,126"}},{"content":"<em><strong>度：一个事物维持自身质的稳定的量的限度</strong></em>","children":[],"payload":{"lines":"126,127"}},{"content":"<em><strong>关节点：事物量变达到极限，引起质变的节点</strong></em>","children":[],"payload":{"lines":"127,128"}},{"content":"<em><strong>要求：坚持适度原则</strong></em>","children":[],"payload":{"lines":"128,132"}}],"payload":{"lines":"122,123"}}],"payload":{"lines":"113,114"}}],"payload":{"lines":"106,107"}},{"content":"第三课时 唯物辩证法的实质与核心（辩证法）","children":[{"content":"矛盾的同一性与斗争性：","children":[{"content":"同一性：统一；斗争性：对立","children":[],"payload":{"lines":"136,137"}},{"content":"<em><strong>斗争性寓于同一性之中，并为同一性制约</strong></em>","children":[],"payload":{"lines":"137,138"}},{"content":"<em><strong>事物是绝对斗争相对同一</strong></em>","children":[],"payload":{"lines":"138,139"}},{"content":"斗争性与同一性不能转化，但矛盾双方可以转化，要在对立中把我统一，在统一中把握对立","children":[],"payload":{"lines":"139,141"}}],"payload":{"lines":"134,135"}},{"content":"矛盾的普遍性与特殊性","children":[{"content":"普遍性：矛盾存在于每个事物中，并贯穿发展始终。---&gt;坚持问题导向，敢于承认矛盾；要坚持一分为二的观点看问题","children":[],"payload":{"lines":"143,144"}},{"content":"特殊性：矛盾着的每个事物及其每一个侧面各有其特点。---&gt;要具体问题具体分析","children":[],"payload":{"lines":"144,145"}},{"content":"矛盾的普遍性和特殊性相互联结，普遍性寓于特殊性之中，并为特殊性展现出来；特殊性包含且离不开普遍性","children":[],"payload":{"lines":"145,146"}},{"content":"矛盾的普遍性和特殊性一定条件下可以相互转换","children":[],"payload":{"lines":"146,147"}},{"content":"<em><strong>要求：具体问题具体分析</strong></em>","children":[],"payload":{"lines":"147,149"}}],"payload":{"lines":"141,142"}},{"content":"主要矛盾和次要矛盾（<em><strong>侧重于解决问题</strong></em>）：","children":[{"content":"主要矛盾在事物发展过程中处于支配地位，对事物发展起决定性作用","children":[],"payload":{"lines":"151,152"}},{"content":"次要矛盾处于从属地位，对事物发展不起决定性作用","children":[],"payload":{"lines":"152,153"}},{"content":"双方可以转换","children":[],"payload":{"lines":"153,154"}},{"content":"<em><strong>要求：想问题、办问题要抓重点，牵牛鼻子，集中力量解决主要矛盾；又要学会统筹兼顾，恰当处理次要矛盾；</strong></em>","children":[],"payload":{"lines":"154,156"}}],"payload":{"lines":"149,150"}},{"content":"矛盾的主要方面和次要方面（<em><strong>侧重于分析和认识问题，定性</strong></em>）：","children":[{"content":"主要方面：矛盾的主要方面在事物内部处于支配地位，事物的性质是主要矛盾的主要方面决定的","children":[],"payload":{"lines":"158,159"}},{"content":"次要方面：矛盾的次要方面属于被支配地位","children":[],"payload":{"lines":"159,160"}},{"content":"双方可以转换","children":[],"payload":{"lines":"160,161"}},{"content":"<em><strong>要求：想问题、办问题既要全面，又要分清主流和直流</strong></em>","children":[],"payload":{"lines":"161,163"}}],"payload":{"lines":"156,157"}},{"content":"两点论：","children":[{"content":"既要看到主要矛盾，又要看到次要矛盾","children":[],"payload":{"lines":"165,166"}},{"content":"既要看到主要方面，又要看到次要方面","children":[],"payload":{"lines":"166,168"}}],"payload":{"lines":"163,164"}},{"content":"重点论：","children":[{"content":"着重把握主要矛盾","children":[],"payload":{"lines":"170,171"}},{"content":"着重把我主要方面","children":[],"payload":{"lines":"171,173"}}],"payload":{"lines":"168,169"}},{"content":"<em>要坚持两点论和重点论的统一</em>","children":[],"payload":{"lines":"173,174"}}],"payload":{"lines":"132,133"}}],"payload":{"lines":"82,83"}}],"payload":{"lines":"2,3"}},{"content":"第二单元 认识社会与价值选择（认识论）","children":[{"content":"第四课 探索认识的奥秘","children":[{"content":"第一课时 人的认识从何如来","children":[{"content":"认识的两个阶段(意识：相对于物质；认识：相对于实践)：","children":[{"content":"感性认识，认识的初级阶段","children":[],"payload":{"lines":"183,184"}},{"content":"理性认识，认识的高级阶段","children":[],"payload":{"lines":"184,185"}},{"content":"理性认识依赖感性认识","children":[],"payload":{"lines":"185,186"}},{"content":"感性认识有待上升到理性认识","children":[],"payload":{"lines":"186,187"}},{"content":"二者相互渗透相互包含","children":[],"payload":{"lines":"187,189"}}],"payload":{"lines":"181,182"}},{"content":"认识的发展历程（选修三）：","children":[{"content":"\n<p data-lines=\"191,192\">感性具体到思维抽象（部分）再到思维具体（整体）</p>","children":[],"payload":{"lines":"191,193"}},{"content":"\n<p data-lines=\"193,194\">[^感性具体是感性认识，思维抽象与思维具体都是理性认识]:</p>","children":[],"payload":{"lines":"193,195"}}],"payload":{"lines":"189,190"}},{"content":"实践的特点：","children":[{"content":"<em><strong>客观物质性</strong></em>","children":[],"payload":{"lines":"197,198"}},{"content":"<em><strong>能动性</strong></em>","children":[],"payload":{"lines":"198,199"}},{"content":"<em><strong>社会历史性</strong></em>","children":[],"payload":{"lines":"199,201"}}],"payload":{"lines":"195,196"}},{"content":"实践与认识：","children":[{"content":"<em><strong>实践是认识的来源</strong></em>","children":[],"payload":{"lines":"203,204"}},{"content":"<em><strong>实践是认识发展的动力</strong></em>","children":[],"payload":{"lines":"204,205"}},{"content":"<em><strong>实践是检验真理的唯一标准</strong></em>","children":[],"payload":{"lines":"205,206"}},{"content":"<em><strong>实践是认识的目的</strong></em>","children":[],"payload":{"lines":"206,207"}},{"content":"<em><strong>实践决定认识，认识对实践具有反作用</strong></em>","children":[],"payload":{"lines":"207,209"}}],"payload":{"lines":"201,202"}}],"payload":{"lines":"179,180"}},{"content":"第二课时 在实践中追求和发展真理","children":[{"content":"认识发展的特点：","children":[{"content":"<em><strong>反复性：实践--&gt;认识--&gt;实践--&gt;认识.....多次反复</strong></em>","children":[],"payload":{"lines":"213,214"}},{"content":"<em><strong>无限性：追求真理永无止境</strong></em>","children":[],"payload":{"lines":"214,215"}},{"content":"<em><strong>上升性：波浪式前进，螺旋式上升</strong></em>","children":[],"payload":{"lines":"215,217"}}],"payload":{"lines":"211,212"}},{"content":"真理及其特征：","children":[{"content":"<em><strong>与谬误对立，但往往与谬误相伴而行、相比较而存在、相斗争而发展</strong></em>","children":[],"payload":{"lines":"219,220"}},{"content":"<em><strong>客观性：内容是客观的，形式是主观的。同一条件下人们对同一认识对象的真理性认识只有一个</strong></em>","children":[],"payload":{"lines":"220,221"}},{"content":"<em><strong>条件性：真理是有条件的，超出条件范围真理就变成了谬误</strong></em>","children":[],"payload":{"lines":"221,223"}}],"payload":{"lines":"217,218"}}],"payload":{"lines":"209,210"}}],"payload":{"lines":"177,178"}},{"content":"第五课 寻觅社会的真谛（历史唯物主义）","children":[{"content":"社会历史的本质","children":[{"content":"社会生活在本质上是实践的：","children":[{"content":"<em><strong>劳动是社会历史的起点</strong></em>","children":[],"payload":{"lines":"229,230"}},{"content":"<em><strong>人类的物质资料生产是人类社会存在和发展的基础</strong></em>","children":[],"payload":{"lines":"230,232"}}],"payload":{"lines":"227,228"}}],"payload":{"lines":"225,226"}},{"content":"社会历史的发展","children":[{"content":"社会存在与社会意识：","children":[{"content":"社会存在：物质资料的生产过程","children":[],"payload":{"lines":"236,237"}},{"content":"社会意识：社会精神生活的过程，包括政治、法律、风俗等","children":[],"payload":{"lines":"237,238"}},{"content":"历史观的基本问题：社会存在与社会意识的问题","children":[],"payload":{"lines":"238,239"}},{"content":"<em><strong>社会存在决定社会意识</strong></em>","children":[],"payload":{"lines":"239,240"}},{"content":"社会意识具有相对独立性，社会意识有时会落后于社会存在，有时又会先进于社会存在","children":[],"payload":{"lines":"240,241"}},{"content":"先进的社会意识对社会发展起到积极作用，落后的起阻碍作用","children":[],"payload":{"lines":"241,243"}}],"payload":{"lines":"234,235"}},{"content":"生产力与生产关系，经济基础与上层建筑：","children":[{"content":"生产力决定生产关系","children":[],"payload":{"lines":"245,246"}},{"content":"经济基础决定上层建筑","children":[],"payload":{"lines":"246,247"}},{"content":"生产关系适应生产力时推动发展，不适应时阻碍发展","children":[],"payload":{"lines":"247,248"}},{"content":"<em><strong>上层建筑适应经济基础时，就会促进巩固和完善经济基础；为先进的经济基础服务时，就会促进生产力发展；为落后的经济基础服务时，阻碍生产力发展；</strong></em>","children":[],"payload":{"lines":"248,250"}}],"payload":{"lines":"243,244"}}],"payload":{"lines":"232,233"}},{"content":"社会历史的主体","children":[{"content":"社会历史的主体是人民群众：","children":[{"content":"人民群众是物质财富的创造者","children":[],"payload":{"lines":"254,255"}},{"content":"人民群众是精神财富的创造者","children":[],"payload":{"lines":"255,256"}},{"content":"<em><strong>人民群众是社会变革的决定性力量</strong></em>","children":[],"payload":{"lines":"256,258"}}],"payload":{"lines":"252,253"}},{"content":"群众观点与群众路线：","children":[{"content":"<em><strong>群众观点：</strong></em>","children":[{"content":"<em><strong>地位党的根本立场和根本观点，人民群众的根本利益是党的根本出发点。</strong></em>","children":[],"payload":{"lines":"262,263"}},{"content":"<em><strong>内容：相信人民群众自己解放自己，全心全意为人民服务，一切向人民负责，虚心向人民学习</strong></em>","children":[],"payload":{"lines":"263,265"}}],"payload":{"lines":"260,261"}},{"content":"<em><strong>群众路线：</strong></em>","children":[{"content":"<em><strong>地位：党的根本领导方法和工作方法，是党的生命线和根本工作路线</strong></em>","children":[],"payload":{"lines":"267,268"}},{"content":"<em><strong>内容：一切为了人民，一切依靠人民，从群众中来，到群众中去</strong></em>","children":[],"payload":{"lines":"268,270"}}],"payload":{"lines":"265,266"}}],"payload":{"lines":"258,259"}}],"payload":{"lines":"250,251"}}],"payload":{"lines":"223,224"}},{"content":"第六课 实现人生价值","children":[{"content":"价值观：","children":[{"content":"\n<p data-lines=\"274,275\">人们在认识各种事物价值基础上形成的对事物的总看法和根本观点</p>","children":[],"payload":{"lines":"274,276"}},{"content":"\n<p data-lines=\"276,277\">价值观对人们认识世界和改造世界有重要导向作用，影响人的行为选择，是人生的重要向导</p>","children":[],"payload":{"lines":"276,278"}},{"content":"\n<h5 data-lines=\"278,279\">社会主义核心价值观：</h5>","children":[{"content":"\n<p data-lines=\"280,281\">是全社会共同认可的核心价值观</p>","children":[],"payload":{"lines":"280,282"}},{"content":"\n<p data-lines=\"282,283\">凝结着全体人民的共同价值追求</p>","children":[],"payload":{"lines":"282,283"}},{"content":"\n<p data-lines=\"283,284\">既体现了社会主义的本质要求，又传承了中华优秀传统文化，吸收了外来有益成果</p>","children":[],"payload":{"lines":"283,285"}}],"payload":{"lines":"278,285"}},{"content":"\n<p data-lines=\"285,286\">要践行社会主义的集体主义价值观，践行和培育社会主义核心价值观</p>","children":[],"payload":{"lines":"285,287"}}],"payload":{"lines":"272,273"}},{"content":"价值判断和价值选择：","children":[{"content":"特点：","children":[{"content":"<em><strong>社会历史性</strong></em>","children":[],"payload":{"lines":"291,292"}},{"content":"<em><strong>阶级性</strong></em>","children":[],"payload":{"lines":"292,293"}},{"content":"<em><strong>主体差异性</strong></em>","children":[],"payload":{"lines":"293,295"}}],"payload":{"lines":"289,290"}},{"content":"要求：","children":[{"content":"自觉遵守社会发展的客观规律","children":[],"payload":{"lines":"297,298"}},{"content":"自觉站在广大人民立场上","children":[],"payload":{"lines":"298,300"}}],"payload":{"lines":"295,296"}}],"payload":{"lines":"287,288"}},{"content":"价值创造和价值实现：","children":[{"content":"劳动，弘扬劳动精神（根本途径）：人只有在劳动中才能创造和实现人生价值","children":[],"payload":{"lines":"302,303"}},{"content":"在个人与社会的统一中创造价值（客观条件）：社会提供的客观条件是实现人生价值的前提","children":[],"payload":{"lines":"303,304"}},{"content":"在砥砺自我中创造和实现价值：意识能动的指导人们认识世界和改造世界；价值观是人生的重要想到","children":[],"payload":{"lines":"304,306"}}],"payload":{"lines":"300,301"}}],"payload":{"lines":"270,271"}}],"payload":{"lines":"175,176"}},{"content":"第三单元 文化传承与文化创新","children":[{"content":"第七课 继承发展中华优秀传统文化","children":[{"content":"文化：","children":[{"content":"基本信息：","children":[{"content":"人类实践的产物","children":[],"payload":{"lines":"314,315"}},{"content":"经济、政治决定文化","children":[],"payload":{"lines":"315,316"}},{"content":"文化对经济、政治具有反作用","children":[],"payload":{"lines":"316,317"}},{"content":"文化具有自身的传承性和相对的独立性","children":[],"payload":{"lines":"317,319"}}],"payload":{"lines":"312,313"}},{"content":"功能：","children":[{"content":"<em><strong>引领风尚、教育人民、服务社会、推动发展</strong></em>","children":[],"payload":{"lines":"321,323"}}],"payload":{"lines":"319,320"}}],"payload":{"lines":"310,311"}},{"content":"中华优秀传统文化：","children":[{"content":"<em><strong>核心理念：将仁爱、重民本、守诚信、崇正义、尚和合、求大同等</strong></em>","children":[],"payload":{"lines":"325,326"}},{"content":"<em><strong>传统美德：自强不息、敬业乐群、扶危济困、见义勇为、孝老爱亲等</strong></em>","children":[],"payload":{"lines":"326,327"}},{"content":"人文精神：促进社会和谐、鼓励人们向上向善的思想文化内容等","children":[],"payload":{"lines":"327,328"}},{"content":"特点：源远流长和博大精深，有着突出的创造性、突出的统一性、突出的包容性和连续性","children":[],"payload":{"lines":"328,329"}},{"content":"做法：扬弃，创造性转化和创造性发展","children":[],"payload":{"lines":"329,331"}}],"payload":{"lines":"323,324"}},{"content":"中华民族精神：","children":[{"content":"\n<p data-lines=\"333,334\"><em><strong>内涵：爱国主义为核心</strong></em></p>","children":[],"payload":{"lines":"333,335"}},{"content":"\n<p data-lines=\"335,336\">地位：强大的精神动力，集中体现了中华民族整体风貌，是中华民族永远的精神火炬</p>","children":[],"payload":{"lines":"335,337"}},{"content":"\n<h5 data-lines=\"337,338\">不同时期的发展：</h5>","children":[{"content":"\n<p data-lines=\"339,340\">新民主主义革命时期：延安精神，西柏坡精神，长征精神等</p>","children":[],"payload":{"lines":"339,341"}},{"content":"\n<p data-lines=\"341,342\">社会主义革命和建设时期：抗美援朝精神、红旗渠精神、大庆和铁人精神等</p>","children":[],"payload":{"lines":"341,342"}},{"content":"\n<p data-lines=\"342,343\">改革开放和社会主义现代化建设新时期：特区精神、抗洪精神、抗击非典精神等</p>","children":[],"payload":{"lines":"342,343"}},{"content":"\n<p data-lines=\"343,344\">新时代：探月精神，北斗精神，脱贫攻坚精神等</p>","children":[],"payload":{"lines":"343,345"}}],"payload":{"lines":"337,345"}}],"payload":{"lines":"331,332"}}],"payload":{"lines":"308,309"}},{"content":"第八课 学习借鉴外来文化有益成果","children":[{"content":"文化的特点：","children":[{"content":"文化具有民族性：","children":[{"content":"民族文化是一个民族区别于其他民族的独特标识","children":[],"payload":{"lines":"351,352"}},{"content":"是一个民族生存与发展的精神根基","children":[],"payload":{"lines":"352,353"}},{"content":"价值观是民族文化的核心和灵魂","children":[],"payload":{"lines":"353,355"}}],"payload":{"lines":"349,350"}},{"content":"民族具有多样性：","children":[{"content":"如何对待：认同本民族文化，尊重其他民族的文化","children":[],"payload":{"lines":"357,359"}}],"payload":{"lines":"355,356"}}],"payload":{"lines":"347,348"}},{"content":"对待外来文化：","children":[{"content":"求同存异，取长补短","children":[],"payload":{"lines":"361,362"}},{"content":"坚持胸怀天下，保持开放心态","children":[],"payload":{"lines":"362,363"}},{"content":"要与中国具体国情相结合","children":[],"payload":{"lines":"363,367"}}],"payload":{"lines":"359,360"}}],"payload":{"lines":"345,346"}},{"content":"第九课 发展中国特色社会主义文化","children":[{"content":"基本路径：","children":[{"content":"坚定理想信念，以人民为中心，把增进人民福祉、促进人的全面发展作为出发点和落脚点","children":[],"payload":{"lines":"371,372"}},{"content":"坚定中国特色社会主义理论自信、道路自信、制度自信、文化自信","children":[],"payload":{"lines":"372,373"}},{"content":"依靠人民、为了人民","children":[],"payload":{"lines":"373,374"}},{"content":"不忘本来，吸收外来，面向未来","children":[],"payload":{"lines":"374,378"}}],"payload":{"lines":"369,370"}}],"payload":{"lines":"367,368"}}],"payload":{"lines":"306,307"}},{"content":"方法论：","children":[{"content":"一切以时间、地点和条件为转移：","children":[{"content":"唯物论角度：物质决定意识，要求从实际出发、实事求是","children":[],"payload":{"lines":"382,383"}},{"content":"辩证法角度：联系具有普遍性、客观性、多样性；矛盾具有特殊性，要具体问题具体分析","children":[],"payload":{"lines":"383,384"}},{"content":"认识论角度：认识是不断发展的，要一切以时间、地点和条件为转移，反对孤立、静止地形而上学观点","children":[],"payload":{"lines":"384,385"}},{"content":"唯物史观角度：社会存在决定社会意识，价值判断和价值选择具有社会历史性，要与时俱进","children":[],"payload":{"lines":"385,387"}}],"payload":{"lines":"380,381"}},{"content":"一切从实际出发、实事求是（唯物论）：","children":[{"content":"原因：物质决定意识，意识对物质有能动的反作用；规律的客观性与普遍性","children":[],"payload":{"lines":"389,390"}},{"content":"做法：一切从实际出发、实事求是，从客观存在的事物出发，找出事物本身固有的而不是臆造的规律","children":[],"payload":{"lines":"390,392"}}],"payload":{"lines":"387,388"}},{"content":"坚持具体问题具体分析：","children":[{"content":"原因：矛盾具有普遍性，矛盾具有特殊性","children":[],"payload":{"lines":"394,395"}},{"content":"做法：坚持具体问题具体分析","children":[],"payload":{"lines":"395,397"}}],"payload":{"lines":"392,393"}},{"content":"坚持两点论和重点论的统一：","children":[{"content":"原因：矛盾存在主要矛盾和次要矛盾，和主要方面和次要方面。需要把我主要矛盾又不忽视次要矛盾，把握主要方面又不忽视次要方面","children":[],"payload":{"lines":"399,400"}},{"content":"做法：要坚持两点论和重点论的统一","children":[],"payload":{"lines":"400,401"}}],"payload":{"lines":"397,398"}}],"payload":{"lines":"378,379"}}],"payload":{"lines":"0,1"}};
+
+  const options={
+    duration:400,spacingVertical:18,spacingHorizontal:140,
+    autoFit:true,paddingX:40,initialExpandLevel:Infinity
+  };
+  window.mm=markmap.Markmap.create("#mindmap",options,data);
+  const originalData=JSON.parse(JSON.stringify(data));
+
+  /* ══ 状态 ══ */
+  let favorites=[];
+  let groups=[{id:0,name:'默认分组'}];
+  const LEGACY_SKEY='mindmapFavoritesV2';
+  const PAGE_SCOPE=((location.pathname.split('/').pop()||'index.html').replace(/[^a-zA-Z0-9_-]/g,'_').toLowerCase());
+  const SKEY=`mindmapFavoritesV3:${PAGE_SCOPE}`;
+
+  /* ══ Toast ══ */
+  const toastBox=document.getElementById('toast-container');
+  function showToast(msg,type='default',dur=2800){
+    const el=document.createElement('div');
+    el.className=`toast ${type}`;
+    el.innerHTML=`<span class="toast-dot"></span>${msg}`;
+    toastBox.appendChild(el);
+    requestAnimationFrame(()=>el.classList.add('show'));
+    let t=setTimeout(dismiss,dur);
+    function dismiss(){
+      el.classList.remove('show');
+      el.addEventListener('transitionend',()=>el.remove(),{once:true});
+    }
+    el.addEventListener('mouseenter',()=>clearTimeout(t));
+    el.addEventListener('mouseleave',()=>{t=setTimeout(dismiss,dur);});
+  }
+
+  /* ══ 存储 ══ */
+  function readStoredState(key){
+    try{
+      const raw=localStorage.getItem(key);
+      if(!raw)return null;
+      const parsed=JSON.parse(raw);
+      if(!parsed||typeof parsed!=='object')return null;
+      return parsed;
+    }catch(e){
+      return null;
+    }
+  }
+  function applyStoredState(state){
+    favorites=Array.isArray(state?.favorites)?state.favorites:[];
+    groups=(Array.isArray(state?.groups)&&state.groups.length)?state.groups:[{id:0,name:'默认分组'}];
+  }
+  function load(){
+    const scopedState=readStoredState(SKEY);
+    if(scopedState){
+      applyStoredState(scopedState);
+      return;
+    }
+
+    const legacyState=readStoredState(LEGACY_SKEY);
+    if(legacyState){
+      applyStoredState(legacyState);
+      favorites=favorites.filter(f=>f.path?nodeExistsInOrig(f.path):nodeExistsInOrig([f.content]));
+      save();
+      return;
+    }
+
+    favorites=[];
+    groups=[{id:0,name:'默认分组'}];
+  }
+  function save(){localStorage.setItem(SKEY,JSON.stringify({favorites,groups}));}
+
+  /* ══ 树工具 ══ */
+  function getPathContents(root,target){
+    function f(n,p=[]){
+      const np=[...p,n.content];
+      if(n.content===target)return np;
+      for(const c of n.children||[]){const r=f(c,np);if(r)return r;}
+      return null;
+    }
+    return f(root)||[target];
+  }
+  function getNodePath(root,target){
+    function f(n,p=[]){
+      const np=[...p,n.content];
+      if(n.content===target)return np;
+      for(const c of n.children||[]){const r=f(c,np);if(r)return r;}
+      return null;
+    }
+    return f(root);
+  }
+  function collectDesc(node,s){s.add(node.content);(node.children||[]).forEach(c=>collectDesc(c,s));}
+  function pruneToKept(node,kept){
+    if(!kept.has(node.content))return null;
+    if(node.children)node.children=node.children.map(c=>pruneToKept(c,kept)).filter(Boolean);
+    return node;
+  }
+  function nodeExistsInOrig(path){
+    let n=originalData;
+    for(const p of path){
+      if(!n)return false;
+      if(n.content===p)continue;
+      n=(n.children||[]).find(c=>c.content===p);
+    }
+    return!!n;
+  }
+  function cleanFavs(){
+    const old=favorites.length;
+    favorites=favorites.filter(f=>f.path?nodeExistsInOrig(f.path):nodeExistsInOrig([f.content]));
+    if(favorites.length!==old){save();showToast('已清理失效收藏','success');}
+  }
+  function addOrUpdateFav(content,type){
+    if(!content)return;
+    const path=getNodePath(originalData,content);
+    if(!path)return;
+    const ex=favorites.find(f=>JSON.stringify(f.path)===JSON.stringify(path));
+    if(ex){ex.type=type;ex.updated=Date.now();showToast('已更新收藏','success');}
+    else{favorites.push({id:crypto.randomUUID(),content,path,type,added:Date.now(),groupId:0});showToast('收藏成功','success');}
+    save();
+    /* 弹窗开着时刷新 UI */
+    setTimeout(()=>{
+      const m=document.getElementById('fav-modal');
+      if(m && m.classList.contains('show') && typeof renderGroups==='function'){
+        renderGroups(); renderList();
+      }
+    }, 0);
+  }
+  function keptByPath(root,path,type){
+    const s=new Set(path);
+    if(type==='all'){
+      let n=root;
+      for(let i=1;i<path.length;i++){n=(n.children||[]).find(c=>c.content===path[i]);if(!n)break;}
+      if(n)collectDesc(n,s);
+    }
+    return s;
+  }
+
+  /* ══ 展开控制 ══ */
+  function setLevel(node,level,depth=0){
+    node.payload=node.payload||{};
+    node.payload.fold=depth<level?0:1;
+    node.children?.forEach(c=>setLevel(c,level,depth+1));
+  }
+  function applyLevel(level){setLevel(mm.state.data,level);safeSet(mm.state.data);}
+  function isImportant(n){const h=n.content||"";return h.includes("<strong>")||h.includes("<em>");}
+  function pruneImportant(n){
+    const imp=isImportant(n);let hasD=false;
+    if(n.children){n.children=n.children.map(c=>{const p=pruneImportant(c);if(p)hasD=true;return p;}).filter(Boolean);}
+    if(imp||hasD){n.payload={fold:0};if(!hasD&&imp)n.children=[];return n;}
+    return null;
+  }
+  function matchNode(n,words,matchAll){
+    const text=(n.content||"").toLowerCase();
+    const inc=words.filter(w=>!w.startsWith("-"));
+    const exc=words.filter(w=>w.startsWith("-")).map(w=>w.slice(1));
+    if(exc.some(w=>text.includes(w)))return false;
+    if(!inc.length)return true;
+    return matchAll?inc.every(w=>text.includes(w)):inc.some(w=>text.includes(w));
+  }
+  function findOrig(tree,content){
+    if(tree.content===content)return tree;
+    for(const c of tree.children||[]){const f=findOrig(c,content);if(f)return f;}
+    return null;
+  }
+  function pruneKeyword(n,words,matchAll,cut,src){
+    const m=matchNode(n,words,matchAll);let hasD=false;
+    if(n.children){n.children=n.children.map(c=>{const p=pruneKeyword(c,words,matchAll,cut,src);if(p)hasD=true;return p;}).filter(Boolean);}
+    if(m){
+      n.payload={fold:0};
+      if(!cut){const o=findOrig(src,n.content);if(o)n.children=JSON.parse(JSON.stringify(o.children||[]));}
+      return n;
+    }
+    if(hasD){n.payload={fold:0};return n;}
+    return null;
+  }
+  function safeSet(d){
+    mm.setData(d);
+    setTimeout(()=>{attachEvents();cleanFavs();},450);
+  }
+
+  /* ══ 节点事件 ══ */
+  function attachEvents(){
+    d3.selectAll('.markmap-node')
+      .on('mouseover',(_,d)=>{
+        if(!d?.content)return;
+        const p=getPathContents(mm.state.data,d.content);
+        d3.selectAll('.markmap-node').classed('highlighted',x=>p.includes(x.content));
+        d3.selectAll('.markmap-link').classed('highlighted-path',x=>{
+          if(!x?.source||!x?.target)return false;
+          return p.includes(x.source.content)&&p.includes(x.target.content);
+        });
+      })
+      .on('mouseout',()=>{
+        d3.selectAll('.markmap-node').classed('highlighted',false);
+        d3.selectAll('.markmap-link').classed('highlighted-path',false);
+      })
+      .on('contextmenu',(e,d)=>{
+        e.preventDefault();
+        if(d?.content)showCtx(e,d.content);
+      });
+  }
+
+  /* ══ 控制栏 ══ */
+  const expCtrl=document.getElementById('expand-control');
+  const favCtrl=document.getElementById('favorites-control');
+  function closeAll(){expCtrl.classList.remove('open');favCtrl.classList.remove('open');}
+  function toggle(id){const g=document.getElementById(id);const was=g.classList.contains('open');closeAll();if(!was)g.classList.add('open');}
+
+  document.querySelector('#expand-control .control-btn').onclick=()=>toggle('expand-control');
+  document.querySelector('#favorites-control .control-btn').onclick=()=>toggle('favorites-control');
+  document.addEventListener('mousedown',e=>{
+    if(!expCtrl.contains(e.target)&&!favCtrl.contains(e.target))closeAll();
+    if(ctxMenu.classList.contains('show')&&!ctxMenu.contains(e.target))hideCtx();
+  },true);
+
+  document.querySelectorAll('#expand-control [data-level]').forEach(btn=>{
+    btn.onclick=()=>applyLevel(btn.dataset.level==='Infinity'?Infinity:+btn.dataset.level);
+  });
+  document.getElementById('applyCustom').onclick=()=>{
+    const v=+document.getElementById('customLevel').value;
+    if(!isNaN(v))applyLevel(v);
+  };
+  document.getElementById('focusTerminal').onclick=()=>{
+    const t=pruneImportant(JSON.parse(JSON.stringify(originalData)));
+    safeSet(t);
+  };
+  document.getElementById('searchKeyword').onclick=()=>{
+    const raw=document.getElementById('keywordInput').value.toLowerCase().trim();
+    if(!raw)return;
+    const words=raw.split(/\s+/);
+    const matchAll=document.getElementById('matchAll').checked;
+    const cut=document.getElementById('cutToMatch').checked;
+    const impOnly=document.getElementById('importantOnly').checked;
+    let src=originalData,tree=JSON.parse(JSON.stringify(originalData));
+    if(impOnly){src=pruneImportant(JSON.parse(JSON.stringify(originalData)));tree=JSON.parse(JSON.stringify(src));}
+    const p=pruneKeyword(tree,words,matchAll,cut,src);
+    if(p)safeSet(p);
+  };
+  document.getElementById('resetTree').onclick=()=>safeSet(JSON.parse(JSON.stringify(originalData)));
+  document.getElementById('fav-show-all').onclick=()=>{
+    if(!favorites.length){showToast('暂无收藏，右键节点添加');return;}
+    const kept=new Set();
+    favorites.forEach(f=>keptByPath(originalData,f.path,f.type).forEach(c=>kept.add(c)));
+    const t=JSON.parse(JSON.stringify(originalData));
+    const p=pruneToKept(t,kept);
+    if(p)safeSet(p);
+  };
+
+  /* ══ 右键菜单 ══ */
+  const ctxMenu=document.getElementById('context-menu');
+  let ctxContent=null;
+  function showCtx(e,content){
+    ctxContent=content;
+    const x=Math.min(e.clientX+12,window.innerWidth-220);
+    const y=Math.min(e.clientY+8,window.innerHeight-100);
+    ctxMenu.style.left=x+'px';ctxMenu.style.top=y+'px';
+    ctxMenu.classList.add('show');
+  }
+  function hideCtx(){ctxMenu.classList.remove('show');}
+  document.getElementById('ctx-current').onclick=()=>{if(ctxContent)addOrUpdateFav(ctxContent,'current');hideCtx();};
+  document.getElementById('ctx-all').onclick=()=>{if(ctxContent)addOrUpdateFav(ctxContent,'all');hideCtx();};
+
+  /* ══ 弹窗 ══ */
+  const modal=document.getElementById('fav-modal');
+  const listEl=document.getElementById('fav-list');
+  const sidebar=document.getElementById('fav-sidebar');
+
+  let layout='one-col',sortMode='manual',gFilter='all',query='',dragIdx=null;
+
+  /* ── 分组面板 ── */
+  function gCount(gid){return gid==='all'?favorites.length:favorites.filter(f=>f.groupId==gid).length;}
+
+  function renderGroups(){
+    sidebar.querySelectorAll('.group-item').forEach(el=>el.remove());
+    const addRow=document.getElementById('g-add-row');
+    const allItem=makeGroupItem('all','全部收藏',gCount('all'));
+    sidebar.insertBefore(allItem,addRow);
+    groups.forEach(g=>{
+      const item=makeGroupItem(g.id,g.name,gCount(g.id),g.id!==0);
+      sidebar.insertBefore(item,addRow);
+    });
+  }
+
+  function makeGroupItem(gid,name,count,canDel=false){
+    const item=document.createElement('div');
+    item.className='group-item'+(gFilter==gid?' active':'');
+    item.style.position='relative';
+    const actHtml=gid==='all'?'':`<span class="g-acts">
+      <button class="g-act" title="重命名">✎</button>
+      ${canDel?`<button class="g-act del" title="删除">✕</button>`:''}
+    </span>`;
+    item.innerHTML=`
+      <span class="g-label">${name}</span>
+      <span class="g-count">${count}</span>
+      ${actHtml}`;
+
+    item.addEventListener('click',e=>{
+      if(e.target.closest('.g-acts'))return;
+      const prev=gFilter==='all'?-1:+gFilter;
+      const next=gid==='all'?-1:+gid;
+      gFilter=gid;
+      renderGroups();
+      renderList(null,next>prev?'r':'l');
+    });
+    item.querySelector('.g-act:not(.del)')?.addEventListener('click',e=>{
+      e.stopPropagation();startRename(gid,item);
+    });
+    item.querySelector('.g-act.del')?.addEventListener('click',e=>{
+      e.stopPropagation();showDelOverlay(gid,item);
+    });
+    return item;
+  }
+
+  function startRename(gid,itemEl){
+    const g=groups.find(x=>x.id===gid);if(!g)return;
+    const labelEl=itemEl.querySelector('.g-label');
+    const actsEl=itemEl.querySelector('.g-acts');
+    const countEl=itemEl.querySelector('.g-count');
+    [labelEl,actsEl,countEl].forEach(el=>el&&(el.style.display='none'));
+    const inp=document.createElement('input');
+    inp.className='g-inline-input';inp.value=g.name;
+    itemEl.insertBefore(inp,labelEl);inp.focus();inp.select();
+    function confirm(){
+      const n=inp.value.trim();
+      if(n&&n!==g.name){
+        if(groups.some(x=>x.name===n&&x.id!==gid)){showToast('名称不能重复','danger');return;}
+        g.name=n;save();showToast('已重命名','success');
+      }
+      renderGroups();renderList();
+    }
+    function cancel(){
+      inp.remove();
+      [labelEl,actsEl,countEl].forEach(el=>el&&(el.style.display=''));
+    }
+    inp.addEventListener('keydown',e=>{
+      if(e.key==='Enter')confirm();
+      if(e.key==='Escape')cancel();
+      e.stopPropagation();
+    });
+    inp.addEventListener('blur',()=>setTimeout(cancel,100));
+  }
+
+  function showDelOverlay(gid,itemEl){
+    document.querySelectorAll('.del-overlay.open').forEach(el=>{el.classList.remove('open');setTimeout(()=>el.remove(),200);});
+    const g=groups.find(x=>x.id===gid);if(!g)return;
+    const ov=document.createElement('div');
+    ov.className='del-overlay';
+    ov.innerHTML=`<p>删除「${g.name}」？<br/>收藏将移至默认分组</p>
+      <div class="del-overlay-btns">
+        <button class="d-ok">删除</button>
+        <button class="d-no">取消</button>
+      </div>`;
+    itemEl.appendChild(ov);
+    requestAnimationFrame(()=>ov.classList.add('open'));
+    ov.querySelector('.d-ok').addEventListener('click',e=>{
+      e.stopPropagation();
+      favorites.forEach(f=>{if(f.groupId===gid)f.groupId=0;});
+      groups=groups.filter(x=>x.id!==gid);
+      if(gFilter==gid)gFilter='all';
+      save();renderGroups();renderList();
+      showToast('分组已删除','success');
+    });
+    ov.querySelector('.d-no').addEventListener('click',e=>{
+      e.stopPropagation();
+      ov.classList.remove('open');setTimeout(()=>ov.remove(),200);
+    });
+  }
+
+  /* ── 新建分组 ── */
+  const addRow=document.getElementById('g-add-row');
+  const addInp=document.getElementById('g-add-input');
+  document.getElementById('btn-add-group').addEventListener('click',()=>{
+    addRow.classList.add('open');
+    document.getElementById('btn-add-group').style.display='none';
+    addInp.focus();
+  });
+  function hideAddRow(){
+    addRow.classList.remove('open');addInp.value='';
+    document.getElementById('btn-add-group').style.display='';
+  }
+  function confirmAdd(){
+    const n=addInp.value.trim();
+    if(!n){showToast('名称不能为空','danger');return;}
+    if(groups.some(g=>g.name===n)){showToast('名称不能重复','danger');return;}
+    const id=Math.max(...groups.map(g=>g.id))+1;
+    groups.push({id,name:n});save();hideAddRow();renderGroups();renderList();
+    showToast('分组创建成功','success');
+  }
+  document.getElementById('g-add-ok').addEventListener('click',confirmAdd);
+  document.getElementById('g-add-cancel').addEventListener('click',hideAddRow);
+  addInp.addEventListener('keydown',e=>{
+    if(e.key==='Enter')confirmAdd();
+    if(e.key==='Escape')hideAddRow();
+    e.stopPropagation();
+  });
+
+  /* ── 收藏列表 ── */
+  function getFiltered(){
+    let list=[...favorites];
+    if(gFilter!=='all')list=list.filter(f=>f.groupId==gFilter);
+    if(query.trim()){const q=query.toLowerCase();list=list.filter(f=>f.content.toLowerCase().includes(q));}
+    if(sortMode==='name')list.sort((a,b)=>a.content.localeCompare(b.content,'zh-CN'));
+    return list;
+  }
+
+  function renderList(newLayout,animDir){
+    if(newLayout)layout=newLayout;
+    listEl.className='fav-list '+layout;
+    if(animDir){
+      listEl.classList.remove('anim-r','anim-l');
+      requestAnimationFrame(()=>listEl.classList.add(animDir==='r'?'anim-r':'anim-l'));
+    }
+    const list=getFiltered();
+    listEl.innerHTML='';
+    if(!list.length){
+      listEl.innerHTML=`<div class="fav-empty"><span class="fav-empty-icon">☆</span>暂无收藏<br/>右键思维导图节点可添加</div>`;
+      return;
+    }
+    list.forEach(f=>{
+      const ri=favorites.findIndex(x=>x.id===f.id);
+      const item=document.createElement('div');
+      item.className='fav-item';item.draggable=true;item.dataset.index=ri;
+      const gOpts=groups.map(g=>`<option value="${g.id}" ${f.groupId==g.id?'selected':''}>${g.name}</option>`).join('');
+      item.innerHTML=`
+        <span class="drag-handle">⠿</span>
+        <input type="checkbox" data-index="${ri}"/>
+        <div class="fav-content">${f.content}</div>
+        <div class="fav-item-right">
+          <select class="fav-grp-sel" data-index="${ri}">${gOpts}</select>
+          <span class="type-pill">${f.type==='current'?'单独':'所有'}</span>
+        </div>`;
+      listEl.appendChild(item);
+
+      item.querySelector('.fav-grp-sel').addEventListener('change',e=>{
+        e.stopPropagation();
+        const idx=+e.target.dataset.index;
+        favorites[idx].groupId=+e.target.value;
+        save();renderGroups();
+        if(gFilter!=='all'&&favorites[idx].groupId!=gFilter)renderList();
+        showToast('已移动分组','success');
+      });
+
+      item.addEventListener('dragstart',e=>{dragIdx=ri;item.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
+      item.addEventListener('dragend',()=>{item.classList.remove('dragging');dragIdx=null;document.querySelectorAll('.fav-item').forEach(el=>el.classList.remove('drag-over'));});
+      item.addEventListener('dragover',e=>{e.preventDefault();if(dragIdx!=null&&dragIdx!==ri)item.classList.add('drag-over');});
+      item.addEventListener('dragleave',()=>item.classList.remove('drag-over'));
+      item.addEventListener('drop',e=>{
+        e.preventDefault();item.classList.remove('drag-over');
+        if(dragIdx!=null&&dragIdx!==ri){
+          const[rm]=favorites.splice(dragIdx,1);favorites.splice(ri,0,rm);
+          sortMode='manual';updateSortBtns();save();renderList();
+        }
+      });
+    });
+  }
+
+  /* ── 弹窗开关 ── */
+  function openModal(){
+    cleanFavs();renderGroups();
+    modal.style.display='flex';
+    requestAnimationFrame(()=>{
+      modal.classList.add('show');
+      setTimeout(()=>renderList(layout),30);
+    });
+  }
+  function closeModal(){
+    modal.classList.remove('show');
+    modal.addEventListener('transitionend',()=>{modal.style.display='none';},{once:true});
+  }
+  document.getElementById('manage-favorites').onclick=openModal;
+  document.getElementById('fav-close').onclick=closeModal;
+  modal.addEventListener('mousedown',e=>{if(e.target===modal)closeModal();});
+
+  /* ── 布局 ── */
+  document.querySelectorAll('.layout-grp button').forEach(btn=>{
+    btn.onclick=()=>{
+      document.querySelectorAll('.layout-grp button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');renderList(btn.dataset.layout);
+    };
+  });
+
+  /* ── 搜索 ── */
+  document.getElementById('fav-search').addEventListener('input',e=>{query=e.target.value;renderList();});
+
+  /* ── 排序 ── */
+  function updateSortBtns(){
+    document.getElementById('btn-sort-manual').classList.toggle('active',sortMode==='manual');
+    document.getElementById('btn-sort-name').classList.toggle('active',sortMode==='name');
+  }
+  document.getElementById('btn-sort-manual').onclick=()=>{sortMode='manual';updateSortBtns();renderList();};
+  document.getElementById('btn-sort-name').onclick=()=>{sortMode='name';updateSortBtns();renderList();};
+  updateSortBtns();
+
+  /* ── 删除选中 ── */
+  document.getElementById('fav-delete-selected').onclick=()=>{
+    const cb=[...listEl.querySelectorAll('input:checked')];
+    if(!cb.length){showToast('请先勾选要删除的项','danger');return;}
+    const idx=cb.map(c=>+c.dataset.index).sort((a,b)=>b-a);
+    idx.forEach(i=>favorites.splice(i,1));
+    save();renderGroups();renderList();
+    showToast(`已删除 ${idx.length} 项收藏`,'success');
+  };
+
+  /* ── 显示选中 ── */
+  document.getElementById('fav-show-selected').onclick=()=>{
+    const cb=[...listEl.querySelectorAll('input:checked')];
+    if(!cb.length){showToast('请先勾选要显示的项','danger');return;}
+    const idxs=cb.map(c=>+c.dataset.index);
+    const kept=new Set();
+    favorites.filter((_,i)=>idxs.includes(i)).forEach(f=>keptByPath(originalData,f.path,f.type).forEach(c=>kept.add(c)));
+    if(!kept.size)return;
+    const t=JSON.parse(JSON.stringify(originalData));
+    const p=pruneToKept(t,kept);
+    if(p){safeSet(p);closeModal();}
+  };
+
+
+  /* ── 导出收藏 ── */
+  document.getElementById('fav-export').addEventListener('click', (e)=>{
+    e.stopPropagation(); /* 防止冒泡到其他监听器 */
+    try{
+      const payload = JSON.stringify({ favorites, groups }, null, 2);
+      const blob    = new Blob([payload], { type:'application/json' });
+      const url     = URL.createObjectURL(blob);
+      const a       = document.createElement('a');
+      a.href        = url;
+      a.download    = 'favorites_' + new Date().toISOString().slice(0,10) + '.json';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+      showToast('收藏已导出', 'success');
+    }catch(err){
+      showToast('导出失败：' + err.message, 'danger');
+    }
+  });
+
+  /* ── 导入收藏 ── */
+  document.getElementById('fav-import-input').addEventListener('change', e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = evt=>{
+      try{
+        const parsed         = JSON.parse(evt.target.result);
+        const importedFavs   = parsed.favorites || [];
+        const importedGroups = parsed.groups    || [];
+
+        /* 合并分组（按名称去重，id 重新分配） */
+        importedGroups.forEach(ig=>{
+          if(!groups.some(g=>g.name===ig.name)){
+            const newId = Math.max(...groups.map(g=>g.id), 0) + 1;
+            groups.push({ id:newId, name:ig.name });
+          }
+        });
+
+        /* 建立旧 id → 新 id 映射 */
+        const idMap = {};
+        importedGroups.forEach(ig=>{
+          const match = groups.find(g=>g.name===ig.name);
+          if(match) idMap[ig.id] = match.id;
+        });
+
+        /* 合并收藏：校验节点存在 + 去重 */
+        let added=0, skipped=0, invalid=0;
+        importedFavs.forEach(f=>{
+          if(!f.path || !nodeExistsInOrig(f.path)){ invalid++; return; }
+          if(favorites.some(x=>JSON.stringify(x.path)===JSON.stringify(f.path))){ skipped++; return; }
+          favorites.push({ ...f, id:crypto.randomUUID(), groupId: idMap[f.groupId] ?? 0 });
+          added++;
+        });
+
+        save(); renderGroups(); renderList();
+        const msg = '导入完成：新增 '+added+' 条'
+          + (skipped ? '，跳过重复 '+skipped+' 条' : '')
+          + (invalid ? '，无效/失效 '+invalid+' 条' : '');
+        showToast(msg, added>0?'success':'default', 4000);
+      }catch(err){
+        showToast('导入失败：文件格式不正确', 'danger');
+      }
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  });
+
+  /* ══ 初始化 ══ */
+  load();attachEvents();cleanFavs();
+})();
+</script>
+
+<!-- 音乐播放器 -->
+<div id="music-player" class="mp-pending-init">
+  <div class="mp-drag" id="mp-drag">
+    <div class="mp-title-row">
+      <div class="mp-icon">♪</div>
+      <span class="mp-label">Now Playing</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:4px;">
+      <button class="mp-upload-btn" id="mp-upload" title="上传音频">＋</button>
+      <input type="file" id="mp-upload-input" accept="audio/*" multiple style="display:none"/>
+      <button class="mp-collapse" id="mp-collapse" title="折叠">▲</button>
+    </div>
+  </div>
+  <div class="mp-body">
+    <div><!-- grid-row 动画内容包裹层 -->
+    <div class="mp-track">
+      <div class="mp-cover">
+        <img id="mp-cover-img" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px;"/>
+        <span id="mp-cover-emoji">🎵</span>
+        <div class="mp-cover-spin"></div>
+      </div>
+      <div class="mp-info">
+        <div class="mp-song" id="mp-song">上传或选择曲目</div>
+        <div class="mp-artist" id="mp-artist">— —</div>
+      </div>
+    </div>
+    <div class="mp-progress-wrap">
+      <span class="mp-time" id="mp-cur">0:00</span>
+      <div class="mp-bar" id="mp-bar"><div class="mp-bar-fill" id="mp-fill"></div></div>
+      <span class="mp-time right" id="mp-dur">0:00</span>
+    </div>
+    <div class="mp-controls">
+      <button class="mp-btn" id="mp-shuffle" title="随机">⇄</button>
+      <button class="mp-btn" id="mp-prev" title="上一首">⏮</button>
+      <button class="mp-btn mp-play" id="mp-play">▶</button>
+      <button class="mp-btn" id="mp-next" title="下一首">⏭</button>
+      <button class="mp-btn" id="mp-repeat" title="循环">↻</button>
+      <button class="mp-list-btn" id="mp-list-btn" title="播放列表">☰</button>
+    </div>
+    <div class="mp-volume">
+      <span class="mp-vol-icon" id="mp-vol-icon">🔉</span>
+      <div class="mp-vol-bar" id="mp-vol-bar"><div class="mp-vol-fill" id="mp-vol-fill"></div></div>
+    </div>
+    <div class="mp-playlist" id="mp-playlist"></div>
+    </div><!-- /grid-row 包裹层 -->
+  </div>
+</div>
+<link rel="stylesheet" href="player/player.css">
+<script src="player/player.js"></script>
+</body>
+</html>
