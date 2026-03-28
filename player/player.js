@@ -719,18 +719,27 @@
 
   /* ══ 拖拽 ══ */
   const dragHandle=document.getElementById('mp-drag');
-  let dragOffX=0,dragOffY=0,activeDragPointerId=null;
+  let dragOffX=0,dragOffY=0,activeDragPointerId=null,activeDragTouchId=null;
   function getEventClientY(e){
     if(typeof e.clientY==='number') return e.clientY;
     if(e.touches?.length) return e.touches[0].clientY;
     if(e.changedTouches?.length) return e.changedTouches[0].clientY;
     return 0;
   }
+  function getTouchPointById(touchList, touchId){
+    if(typeof touchId!=='number' || !touchList) return null;
+    for(let i=0;i<touchList.length;i++){
+      if(touchList[i].identifier===touchId) return touchList[i];
+    }
+    return null;
+  }
   function startPlayerDrag(e){
     if(e.target.closest('button')||e.target.closest('label')) return;
+    const startPoint=e.touches?.[0] || e.changedTouches?.[0] || e;
+    if(!startPoint) return;
     isDragging=true; player.classList.add('dragging-player');
     const r=player.getBoundingClientRect();
-    const clientX=getEventClientX(e), clientY=getEventClientY(e);
+    const clientX=startPoint.clientX, clientY=startPoint.clientY;
     dragOffX=clientX-r.left; dragOffY=clientY-r.top;
     player.style.right='auto'; player.style.bottom='auto';
     player.style.left=r.left+'px'; player.style.top=r.top+'px';
@@ -738,20 +747,32 @@
       activeDragPointerId=e.pointerId;
       dragHandle.setPointerCapture?.(e.pointerId);
     }
+    if(typeof startPoint.identifier==='number'){
+      activeDragTouchId=startPoint.identifier;
+    }
     e.preventDefault();
   }
   function movePlayerDrag(e){
     if(!isDragging)return;
     if(activeDragPointerId!==null && typeof e.pointerId==='number' && e.pointerId!==activeDragPointerId) return;
+    let movePoint=e;
+    if(e.touches || e.changedTouches){
+      movePoint=getTouchPointById(e.touches,activeDragTouchId)||getTouchPointById(e.changedTouches,activeDragTouchId);
+      if(!movePoint) return;
+    }
     if(e.cancelable) e.preventDefault();
-    const clientX=getEventClientX(e), clientY=getEventClientY(e);
+    const clientX=movePoint.clientX, clientY=movePoint.clientY;
     player.style.left=Math.max(0,Math.min(window.innerWidth-player.offsetWidth,  clientX-dragOffX))+'px';
     player.style.top =Math.max(0,Math.min(window.innerHeight-player.offsetHeight, clientY-dragOffY))+'px';
   }
-  function stopDrag(){
+  function stopDrag(e){
     if(!isDragging) return;
+    if(e?.touches || e?.changedTouches){
+      if(activeDragTouchId!==null && !getTouchPointById(e.changedTouches,activeDragTouchId) && e.type!=='touchcancel') return;
+    }
     isDragging=false;
     activeDragPointerId=null;
+    activeDragTouchId=null;
     player.classList.remove('dragging-player');
   }
   dragHandle.addEventListener('pointerdown', startPlayerDrag);
@@ -760,6 +781,8 @@
   dragHandle.addEventListener('touchstart', startPlayerDrag, {passive:false});
   document.addEventListener('touchmove', movePlayerDrag, {passive:false});
   document.addEventListener('touchend', stopDrag);
+  document.addEventListener('touchcancel', stopDrag);
+  document.addEventListener('pointercancel', stopDrag);
   document.addEventListener('mouseup', stopDrag);
   // 鼠标移出窗口后松开再移回来也能正确停止拖拽
   window.addEventListener('blur', stopDrag);
