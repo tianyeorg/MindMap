@@ -76,6 +76,7 @@ body::-webkit-scrollbar{ display:none; } /* Chrome/Safari */
   right:16px;
   bottom:16px;
   transition:box-shadow .2s, opacity .3s;
+  touch-action:none;
 }
 #music-player.mp-pending-init{
   opacity:0;
@@ -89,6 +90,7 @@ body::-webkit-scrollbar{ display:none; } /* Chrome/Safari */
 #music-player.dragging-player{
   box-shadow:0 20px 64px rgba(0,0,0,.75), 0 0 0 1px rgba(126,170,255,.2);
   opacity:.96;
+  touch-action:none;
 }
 
 /* 拖拽把手 */
