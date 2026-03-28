@@ -720,6 +720,19 @@
   /* ══ 拖拽 ══ */
   const dragHandle=document.getElementById('mp-drag');
   let dragOffX=0,dragOffY=0,activeDragPointerId=null,activeDragTouchId=null;
+  function swallowPlayerEvent(e){
+    e.stopPropagation();
+  }
+  function swallowPlayerTouchMove(e){
+    e.stopPropagation();
+    if(isDragging && e.cancelable) e.preventDefault();
+  }
+  ['pointerdown','pointermove','pointerup','mousedown','mousemove','mouseup','click'].forEach(type=>{
+    player.addEventListener(type, swallowPlayerEvent, true);
+  });
+  player.addEventListener('touchstart', swallowPlayerEvent, {capture:true, passive:false});
+  player.addEventListener('touchend', swallowPlayerEvent, {capture:true, passive:false});
+  player.addEventListener('touchmove', swallowPlayerTouchMove, {capture:true, passive:false});
   function getEventClientY(e){
     if(typeof e.clientY==='number') return e.clientY;
     if(e.touches?.length) return e.touches[0].clientY;
@@ -734,6 +747,7 @@
     return null;
   }
   function startPlayerDrag(e){
+    e.stopPropagation();
     if(e.target.closest('button')||e.target.closest('label')) return;
     const startPoint=e.touches?.[0] || e.changedTouches?.[0] || e;
     if(!startPoint) return;
@@ -754,6 +768,7 @@
   }
   function movePlayerDrag(e){
     if(!isDragging)return;
+    e.stopPropagation();
     if(activeDragPointerId!==null && typeof e.pointerId==='number' && e.pointerId!==activeDragPointerId) return;
     let movePoint=e;
     if(e.touches || e.changedTouches){
@@ -767,6 +782,7 @@
   }
   function stopDrag(e){
     if(!isDragging) return;
+    e?.stopPropagation?.();
     if(e?.touches || e?.changedTouches){
       if(activeDragTouchId!==null && !getTouchPointById(e.changedTouches,activeDragTouchId) && e.type!=='touchcancel') return;
     }
